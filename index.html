@@ -9,6 +9,34 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Estilo rápido para as sub-abas da Agenda */
+    .agenda-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .btn-agenda {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .btn-agenda.active {
+      background-color: #2c3e50;
+      color: white;
+    }
+    .calendar-container {
+      display: none;
+    }
+    .calendar-container.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -34,7 +62,6 @@
   <section id="painel" class="tabcontent" style="display:block;">
     <h2>Painéis</h2>
     <div class="grid">
-      
       <div class="card painel">
           <img src="img/trofeu Conquistado .png" alt="Painel Prêmio 2025" class="card-icon">
           <h3>Prêmio 2025</h3>
@@ -221,7 +248,6 @@
 
   <section id="ferramenta" class="tabcontent">
     <h2>Ferramentas</h2>
-
     <div class="subcategoria">
       <h3>Ferramentas Rápidas</h3>
       <div class="grid">
@@ -234,7 +260,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/Ponto.png" alt="Ponto Remoto" class="card-icon">
           <h3>Ponto Remoto</h3>
@@ -244,7 +269,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/Acesso.png" alt="Acesso Servidor" class="card-icon">
           <h3>Acesso Servidor</h3>
@@ -254,7 +278,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/whatsapplogo.png" alt="Whatsapp" class="card-icon">
           <h3>Whatsapp</h3>
@@ -264,7 +287,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/googledirve.png" alt="Drive SEGOV" class="card-icon">
           <h3>Drive SEGOV</h3>
@@ -274,7 +296,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/googledirve.png" alt="Drive SUMAE" class="card-icon">
           <h3>Drive SUMAE</h3>
@@ -284,7 +305,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/gemini.png" alt="Gemini" class="card-icon">
           <h3>Gemini</h3>
@@ -294,7 +314,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/ChatGPT-Logo.png" alt="ChatGPT" class="card-icon">
           <h3>ChatGPT</h3>
@@ -304,7 +323,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/nextcloud.png" alt="NextCloud" class="card-icon">
           <h3>NextCloud</h3>
@@ -314,7 +332,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/sei-logo.png" alt="Acesso SEI" class="card-icon">
           <h3>Acesso SEI</h3>
@@ -326,7 +343,7 @@
         </div>
       </div>
     </div>
-  
+
     <div class="subcategoria">
       <h3>Outras Ferramentas</h3>
       <div class="grid">
@@ -339,7 +356,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/logo_TJAC_v.png" alt="Painéis TJAC" class="card-icon">
           <h3>Painéis TJAC</h3>
@@ -349,7 +365,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/Portaria.png" alt="Portaria Prêmio Qualidade" class="card-icon">
           <h3>Portaria Prêmio Qualidade</h3>
@@ -359,7 +374,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/Saj Pg.png" alt="SAJ-Insights PG" class="card-icon">
           <h3>SAJ-Insights PG</h3>
@@ -369,7 +383,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/Saj SG.png" alt="SAJ-Insights SG" class="card-icon">
           <h3>SAJ-Insights SG</h3>
@@ -379,7 +392,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/Qlik_Logo.svg.png" alt="Qlik Sense Produção" class="card-icon">
           <h3>Qlik Sense Produção</h3>
@@ -389,7 +401,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/Qlik_Logo.svg.png" alt="Qlik Sense Painéis" class="card-icon">
           <h3>Qlik Sense Painéis</h3>
@@ -399,7 +410,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/SEEU.png" alt="Sistema SEEU" class="card-icon">
           <h3>Sistema SEEU</h3>
@@ -409,7 +419,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/SEEU.png" alt="Distribuição SEEU" class="card-icon">
           <h3>Distribuição SEEU</h3>
@@ -419,7 +428,6 @@
             </a>
           </div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/WordPress.png" alt="Wordpress TJ" class="card-icon">
           <h3>Wordpress TJ</h3>
@@ -429,8 +437,7 @@
             </a>
           </div>
         </div>
-
-         <div class="card ferramenta">
+        <div class="card ferramenta">
           <img src="img/Ferramentas/SIGAM.png" alt="SIGAM" class="card-icon">
           <h3>SIGAM</h3>
           <div class="card-buttons">
@@ -439,7 +446,6 @@
             </a>
           </div>
         </div>
-        
         <div class="card ferramenta">
           <img src="img/Ferramentas/GoogleChat.png" alt="Google Chat" class="card-icon">
           <h3>Google Chat</h3>
@@ -455,14 +461,68 @@
 
   <section id="agenda" class="tabcontent">
     <h2>Agenda</h2>
-    <iframe src="https://calendar.google.com/calendar/embed?src=c_a010cb12260e1148da40d976d21f539b7043572bd65a5acc6ac8357fb11810ab%40group.calendar.google.com&ctz=America%2FRio_Branco" style="border: 0; width: 100%; height: 600px;" frameborder="0" scrolling="no"></iframe>
+    
+    <div class="agenda-selector">
+      <button class="btn-agenda active" onclick="switchAgenda('programacao', this)">Programação</button>
+      <button class="btn-agenda" onclick="switchAgenda('ferias', this)">Férias</button>
+    </div>
+
+    <div id="programacao" class="calendar-container active">
+      <iframe src="https://calendar.google.com/calendar/embed?src=c_a010cb12260e1148da40d976d21f539b7043572bd65a5acc6ac8357fb11810ab%40group.calendar.google.com&ctz=America%2FRio_Branco" style="border: 0; width: 100%; height: 600px;" frameborder="0" scrolling="no"></iframe>
+    </div>
+
+    <div id="ferias" class="calendar-container">
+      <iframe src="https://calendar.google.com/calendar/embed?src=772db5175c4b02d6ff397f7d698c508a82851ebb718302f4042cf6f48359c2de%40group.calendar.google.com&ctz=America%2FRio_Branco" style="border: 0; width: 100%; height: 600px;" frameborder="0" scrolling="no"></iframe>
+    </div>
   </section>
 </main>
-  <footer>
-    <p>Site Produzido pela SUMAE</p>
-  </footer>
 
-  <script src="script.js"></script>
+<footer>
+  <p>Site Produzido pela SUMAE</p>
+</footer>
+
+<script>
+  // Função para alternar entre as agendas
+  function switchAgenda(agendaId, btn) {
+    // Remove classe active de todos os containers e botões
+    document.querySelectorAll('.calendar-container').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.btn-agenda').forEach(el => el.classList.remove('active'));
+    
+    // Adiciona classe active no selecionado
+    document.getElementById(agendaId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Mantenha aqui as suas funções originais de openTab e filterCards
+  function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablink");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+  }
+
+  function filterCards() {
+    var input, filter, grid, cards, h3, i, txtValue;
+    input = document.getElementById('searchInput');
+    filter = input.value.toUpperCase();
+    cards = document.getElementsByClassName('card');
+    for (i = 0; i < cards.length; i++) {
+      h3 = cards[i].getElementsByTagName("h3")[0];
+      txtValue = h3.textContent || h3.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        cards[i].style.display = "";
+      } else {
+        cards[i].style.display = "none";
+      }
+    }
+  }
+</script>
 </body>
 </html>
-
