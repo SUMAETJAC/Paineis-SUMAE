@@ -36,7 +36,7 @@
     .calendar-container.active {
       display: block;
     }
-    /* Estilo para área de anotação local */
+    /* Estilo extra para a área de anotação local */
     #textoAnotacoes {
       width: 100%;
       height: 400px;
@@ -344,25 +344,21 @@
           <h3>ChatGPT</h3>
           <div class="card-buttons"><a href="https://chatgpt.com/" target="_blank" class="btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a></div>
         </div>
-        
         <div class="card ferramenta">
           <img src="img/Ferramentas/radar.png" alt="Plano Radar CNJ" class="card-icon">
           <h3>Plano Radar CNJ</h3>
           <div class="card-buttons"><a href="https://cnj-plano-radar.lovable.app/" target="_blank" class="btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a></div>
         </div>
-        
         <div class="card ferramenta">
           <img src="img/Ferramentas/sei-logo.png" alt="Acesso SEI" class="card-icon">
           <h3>Acesso SEI</h3>
           <div class="card-buttons"><a href="https://sei.tjac.jus.br/sip/login.php?sigla_orgao_sistema=TJAC&sigla_sistema=SEI" target="_blank" class="btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a></div>
         </div>
-
         <div class="card ferramenta">
           <img src="img/Ferramentas/nextcloud.png" alt="NextCloud" class="card-icon">
           <h3>NextCloud</h3>
           <div class="card-buttons"><a href="https://cloud.tjac.jus.br/index.php/apps/dashboard/" target="_blank" class="btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a></div>
         </div>
-        
       </div>
     </div>
 
@@ -472,7 +468,7 @@
 
     <div id="anotacao-sumae" class="calendar-container">
       <p style="margin-bottom: 10px; font-size: 0.9em; color: #555;">Anotações compartilhadas. Você precisa estar logado na conta Google autorizada para visualizar e editar.</p>
-      <iframe src="https://docs.google.com/document/d/SEU_ID_DO_DOC_AQUI/edit?rm=minimal" style="border: 1px solid #ccc; width: 100%; height: 600px; border-radius: 8px;"></iframe>
+      <iframe src="https://docs.google.com/document/d/19Af3fy_KvSKA6EzXDBpSeoLz7PYxNsB3eSgWWXMWP4U/edit?rm=minimal" style="border: 1px solid #ccc; width: 100%; height: 600px; border-radius: 8px;"></iframe>
     </div>
   </section>
 
@@ -482,64 +478,6 @@
   <p>Site Produzido pela SUMAE</p>
 </footer>
 
-<script>
-  // Alterna as abas principais
-  function openTab(evt, tabName) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
-    tablinks = document.getElementsByClassName("tablink");
-    for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
-  }
-
-  // Filtro de pesquisa
-  function filterCards() {
-    var input, filter, cards, h3, i, txtValue;
-    input = document.getElementById('searchInput');
-    filter = input.value.toUpperCase();
-    cards = document.getElementsByClassName('card');
-    for (i = 0; i < cards.length; i++) {
-      h3 = cards[i].getElementsByTagName("h3")[0];
-      txtValue = h3.textContent || h3.innerText;
-      if (txtValue.toUpperCase().indexOf(filter) > -1) { cards[i].style.display = ""; } 
-      else { cards[i].style.display = "none"; }
-    }
-  }
-
-  // Alterna as sub-abas da Agenda
-  function switchAgenda(agendaId, btn) {
-    document.querySelectorAll('#agenda .calendar-container').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('#agenda .btn-agenda').forEach(el => el.classList.remove('active'));
-    document.getElementById(agendaId).classList.add('active');
-    btn.classList.add('active');
-  }
-
-  // Alterna as sub-abas de Anotações
-  function switchAnotacao(anotacaoId, btn) {
-    document.querySelectorAll('#anotacoes .calendar-container').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('#anotacoes .btn-agenda').forEach(el => el.classList.remove('active'));
-    document.getElementById(anotacaoId).classList.add('active');
-    btn.classList.add('active');
-  }
-
-  // Carrega as anotações locais quando a página abre
-  document.addEventListener("DOMContentLoaded", function() {
-    const campoAnotacao = document.getElementById("textoAnotacoes");
-    if (campoAnotacao) {
-      campoAnotacao.value = localStorage.getItem("minhas_anotacoes") || "";
-    }
-  });
-
-  // Salva a anotação local no navegador
-  function salvarAnotacaoLocal() {
-    const campoAnotacao = document.getElementById("textoAnotacoes");
-    if (campoAnotacao) {
-      localStorage.setItem("minhas_anotacoes", campoAnotacao.value);
-      alert("Anotação salva com sucesso!");
-    }
-  }
-</script>
+<script src="script.js"></script>
 </body>
 </html>
