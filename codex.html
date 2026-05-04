@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Codex - Prêmio CNJ</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+     <link rel="manifest" href="/site.webmanifest">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        input[type="checkbox"] { width: 1.2rem; height: 1.2rem; cursor: pointer; accent-color: #1e3a8a; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-12">
+
+    <header class="bg-blue-900 text-white shadow-md py-4 px-4 sm:px-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 transition px-4 py-2 rounded-lg font-bold shadow-sm border border-blue-700 text-sm">
+             Voltar ao Início
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Análise Codex (Item F)</h1>
+                <p class="text-blue-200 text-sm mt-1">Prêmio CNJ de Qualidade</p>
+            </div>
+        </div>
+        <div>
+            <a href="https://paineisanalytics.cnj.jus.br/single/?appid=de543e38-1c79-412e-b7b2-51624b55349d&sheet=2c946c67-9efe-4e23-a74c-d1c4792fb0bb&theme=horizon&lang=pt-BR&opt=ctxmenu,currsel" target="_blank" class="text-sm bg-blue-700 hover:bg-blue-600 transition py-2 px-4 rounded font-medium text-white shadow flex items-center gap-2">
+                🔗 Painel CNJ Oficial
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8 space-y-6">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <section class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 flex flex-col justify-center">
+                <h2 class="text-xl font-bold mb-2 text-gray-800">1. Iniciar Análise</h2>
+                <p class="text-gray-600 mb-6 text-sm">Envie a planilha <strong>.xlsx</strong> extraída do CNJ.</p>
+                
+                <label for="arquivo-dados" class="flex flex-col items-center justify-center w-full h-32 border-2 border-blue-400 border-dashed rounded-xl cursor-pointer bg-blue-50 hover:bg-blue-100 transition duration-300">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                        <svg class="w-10 h-10 mb-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <p class="mb-1 text-blue-800 font-bold text-sm">Clique para selecionar o arquivo</p>
+                    </div>
+                    <input id="arquivo-dados" type="file" accept=".csv, .xlsx" class="hidden" />
+                </label>
+                
+                <div id="tela-carregamento" class="hidden mt-6 flex items-center justify-center p-4 bg-blue-100 text-blue-800 rounded-lg">
+                    <svg class="spin w-6 h-6 mr-3 text-blue-700" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle></svg>
+                    <span class="font-bold text-sm">Lendo planilha e calculando...</span>
+                </div>
+            </section>
+
+            <section class="lg:col-span-2 bg-indigo-50 rounded-xl shadow-sm p-6 border border-indigo-100">
+                <h3 class="text-lg font-bold text-indigo-900 mb-3">📖 Regra da "Franquia de Tempo"</h3>
+                <p class="text-sm text-indigo-800 mb-4">A avaliação do CNJ é feita de <strong>1º de Janeiro a 31 de Julho</strong> (7 meses). Pense na pontuação como uma <strong>franquia de internet</strong>. Para ganhar 35 pontos (Média < 5 min), você tem uma franquia de <strong>35 minutos anuais</strong>. Se gastar muito num mês atípico, a franquia estoura.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-indigo-900">
+                    <div class="bg-white/60 p-4 rounded-lg border border-indigo-200">
+                        <strong class="block text-indigo-900 mb-2">🔍 O Detalhamento</strong>
+                        <p>A ferramenta agora <strong>traduz</strong> a lista bagunçada do CNJ. Mostramos a data limpa, o tempo de latência isolado em formato fácil (Ex: 00h 02m 15s) e se ele foi contado na média (✅) ou descartado (⚠️).</p>
+                    </div>
+                    <div class="bg-white/60 p-4 rounded-lg border border-indigo-200">
+                        <strong class="block text-indigo-900 mb-2">🏆 Tabela de Pontuação CNJ</strong>
+                        <ul class="space-y-1 font-medium flex flex-col gap-1">
+                            <li class="bg-green-100 text-green-800 px-2 py-1 rounded">🟩 Menor que 5 min = <strong>35 pts</strong></li>
+                            <li class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">🟨 5m a 9m59s = <strong>20 pts</strong></li>
+                            <li class="bg-orange-100 text-orange-800 px-2 py-1 rounded">🟧 10m a 59m59s = <strong>15 pts</strong></li>
+                            <li class="bg-red-100 text-red-800 px-2 py-1 rounded">🟥 1h a 6h = <strong>10 pts</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="painel-resultados" class="hidden space-y-6">
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-md font-bold text-gray-800 mb-1">⚙️ Filtro Interativo de Meses:</h3>
+                    <p class="text-sm text-gray-500">Desmarque os meses que ainda estão rolando. A matemática se ajusta na hora.</p>
+                </div>
+                <div id="container-filtros" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="bg-white rounded-xl shadow-sm border-t-4 border-blue-500 p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Média Atual (Parcial)</h3>
+                        <p class="text-sm text-gray-600 mb-2" id="txt-meses-analisados">Aguardando...</p>
+                        <p id="txt-latencia-media" class="text-3xl font-black text-blue-900 mb-2">00d 00h 00m</p>
+                    </div>
+                    <div>
+                        <span id="badge-pontos" class="inline-block bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">Situação: 0 Pontos</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border-t-4 border-purple-500 p-6 md:col-span-2">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1" id="txt-status-projecao">Cálculo da Franquia Restante</h3>
+                    <p class="text-sm text-gray-600 mb-4" id="txt-meta-texto">Analisando dados...</p>
+                    
+                    <div class="bg-purple-50 p-4 rounded border border-purple-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-purple-900 font-bold">Franquia Gasta:</p>
+                            <p id="txt-tempo-gasto" class="text-lg font-black text-purple-700">00d 00h 00m</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-purple-900 font-bold">Franquia Total Disponível:</p>
+                            <p id="txt-teto-permitido" class="text-lg font-black text-purple-700">00d 00h 00m</p>
+                        </div>
+                    </div>
+                    <p class="text-[13px] text-gray-700 font-medium mt-3 bg-yellow-50 border border-yellow-200 p-3 rounded leading-relaxed shadow-sm" id="txt-dica-estrategica"></p>
+                </div>
+
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">🔎 Detalhamento (Piores dias destacados)</h3>
+                        <p class="text-sm text-gray-600">Dias com <span class="font-bold text-orange-600">🔔 (Tempo Alto)</span> são os dias que o CNJ contou na nota e puxaram a média do tribunal para baixo.</p>
+                    </div>
+                </div>
+                <div id="container-meses" class="space-y-3"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let dadosDoCodex = null;
+
+        function tempoParaMinutos(tempoStr) {
+            try {
+                let str = tempoStr.trim();
+                let diasEmMinutos = 0;
+                if (str.includes("day")) {
+                    let partesDia = str.split("day");
+                    let qtdDias = parseFloat(partesDia[0].trim());
+                    diasEmMinutos = qtdDias * 24 * 60; 
+                    str = partesDia[1].replace("s", "").trim(); 
+                }
+                if (str.includes("-")) str = str.split("-")[0].trim();
+                let partes = str.split(':');
+                let horas = parseFloat(partes[0]) || 0;
+                let minutos = parseFloat(partes[1]) || 0;
+                let segundos = parseFloat(partes[2] ? partes[2].split('.')[0] : 0) || 0;
+                return diasEmMinutos + (horas * 60) + minutos + (segundos / 60);
+            } catch (e) { return 0; }
+        }
+
+        // Formatação Humana (Dias, Horas, Minutos e Segundos)
+        function minutosParaTempo(minutosTotais) {
+            if (minutosTotais <= 0) return "00s";
+            let dias = Math.floor(minutosTotais / 1440);
+            let horas = Math.floor((minutosTotais % 1440) / 60);
+            let minutos = Math.floor(minutosTotais % 60);
+            let segundos = Math.floor((minutosTotais * 60) % 60);
+            
+            let str = "";
+            if (dias > 0) str += `${dias}d `;
+            str += `${String(horas).padStart(2, '0')}h ${String(minutos).padStart(2, '0')}m ${String(segundos).padStart(2, '0')}s`;
+            return str;
+        }
+
+        function formatarMes(dataISO) {
+            try {
+                let partes = dataISO.split("-");
+                let nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                return `${nomes[parseInt(partes[1]) - 1]}/${partes[0]}`;
+            } catch (e) { return dataISO; }
+        }
+
+        function formatarDiaBr(dataISO) {
+            try {
+                let partes = dataISO.trim().split("-");
+                if(partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+                return dataISO;
+            } catch (e) { return dataISO; }
+        }
+
+        // NOVO: Função para formatar a linha crua do CNJ para uma leitura impecável
+        function formatarLinhaDetalhe(linhaOriginal) {
+            try {
+                // Divide por " - " 
+                let partes = linhaOriginal.split(" - ");
+                if (partes.length >= 3) {
+                    let dataFormatada = formatarDiaBr(partes[0]);
+                    let tempoMinutos = tempoParaMinutos(partes[1]);
+                    let tempoAmigavel = minutosParaTempo(tempoMinutos);
+                    let status = partes.slice(2).join(" - ").trim();
+
+                    return `<strong class="text-gray-800">${dataFormatada}</strong> <span class="mx-1 text-gray-400">&rarr;</span> <span class="font-mono bg-white border border-gray-200 text-gray-700 px-1.5 py-0.5 rounded text-xs shadow-sm">${tempoAmigavel}</span> <span class="ml-2 italic text-gray-500">(${status})</span>`;
+                }
+                return linhaOriginal;
+            } catch (e) { return linhaOriginal; }
+        }
+
+        function inicializarDashboard(textoJsonBruto) {
+            try {
+                let jsonSujo = textoJsonBruto.replace(/""/g, '"').replace(/_x000D_/g, '').replace(/\r?\n|\r/g, '');
+                dadosDoCodex = JSON.parse(jsonSujo);
+                
+                let chavesMeses = Object.keys(dadosDoCodex.meses).sort();
+                let divFiltros = document.getElementById('container-filtros');
+                divFiltros.innerHTML = "";
+
+                chavesMeses.forEach(mes => {
+                    let label = document.createElement('label');
+                    label.className = "flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full cursor-pointer hover:bg-blue-100 transition text-sm font-medium text-blue-900";
+                    
+                    let checkbox = document.createElement('input');
+                    checkbox.type = "checkbox";
+                    checkbox.value = mes;
+                    checkbox.checked = true;
+                    checkbox.className = "chk-mes";
+                    checkbox.addEventListener('change', atualizarCalculosNaTela);
+
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(formatarMes(mes)));
+                    divFiltros.appendChild(label);
+                });
+
+                document.getElementById('painel-resultados').classList.remove('hidden');
+                document.getElementById('painel-resultados').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                atualizarCalculosNaTela();
+            } catch (e) { alert("Erro ao ler estrutura JSON: " + e.message); }
+        }
+
+        function atualizarCalculosNaTela() {
+            if (!dadosDoCodex) return;
+
+            let checkboxesMarcados = document.querySelectorAll('.chk-mes:checked');
+            let mesesSelecionados = Array.from(checkboxesMarcados).map(cb => cb.value).sort();
+            
+            let qtdMeses = mesesSelecionados.length;
+            let somaMinutosGasta = 0;
+            let htmlMeses = "";
+
+            if (qtdMeses === 0) {
+                document.getElementById('txt-latencia-media').innerText = "00s";
+                document.getElementById('txt-meses-analisados').innerText = "Nenhum mês selecionado";
+                document.getElementById('badge-pontos').innerText = `Situação Atual: -- Pontos`;
+                document.getElementById('txt-status-projecao').innerText = "Aguardando seleção";
+                document.getElementById('txt-meta-texto').innerText = "Marque ao menos um mês.";
+                document.getElementById('txt-tempo-gasto').innerText = "00s";
+                document.getElementById('txt-teto-permitido').innerText = "00s";
+                document.getElementById('txt-dica-estrategica').innerText = "";
+                document.getElementById('container-meses').innerHTML = "<p class='text-gray-500'>Nenhum mês selecionado.</p>";
+                return;
+            }
+
+            mesesSelecionados.forEach(mes => {
+                let minMes = tempoParaMinutos(dadosDoCodex.meses[mes]);
+                somaMinutosGasta += minMes;
+                
+                let diasDetalhados = dadosDoCodex.detalhamento[mes] || [];
+                let htmlProblemas = "";
+                let qtdProblemas = 0;
+                let diasComputados = [];
+
+                diasDetalhados.forEach(diaInfo => {
+                    let textoLimpo = diaInfo.trim();
+                    if (textoLimpo.includes("Descarte") || textoLimpo.includes("Indisponível")) {
+                        qtdProblemas++;
+                        let corTexto = textoLimpo.includes("Indisponível") ? "text-red-700 font-bold" : "text-orange-600";
+                        // Traduz e formata a linha de Problema
+                        let linhaFormatada = formatarLinhaDetalhe(textoLimpo);
+                        htmlProblemas += `<li class="${corTexto} py-2 border-b border-gray-100 text-sm">⚠️ ${linhaFormatada}</li>`;
+                    } else if (textoLimpo.includes("Computado")) {
+                        let partes = textoLimpo.split(" - ");
+                        let tempoDiaStr = partes.length >= 2 ? partes[1] : "00:00:00";
+                        diasComputados.push({
+                            textoOriginal: textoLimpo,
+                            tempoEmMinutos: tempoParaMinutos(tempoDiaStr)
+                        });
+                    }
+                });
+
+                diasComputados.sort((a, b) => b.tempoEmMinutos - a.tempoEmMinutos);
+
+                let htmlComputados = "";
+                let qtdComputados = diasComputados.length;
+
+                diasComputados.forEach((diaObj, index) => {
+                    // Traduz e formata a linha de Cômputo
+                    let linhaFormatada = formatarLinhaDetalhe(diaObj.textoOriginal);
+
+                    if (index < 3 && diaObj.tempoEmMinutos > 0) {
+                        htmlComputados += `<li class="text-orange-700 py-2 border-b border-orange-200 text-sm bg-orange-50 px-2 rounded my-1 shadow-sm border">🔔 ${linhaFormatada}</li>`;
+                    } else {
+                        htmlComputados += `<li class="text-green-800 py-2 border-b border-gray-100 text-sm px-2">✅ ${linhaFormatada}</li>`;
+                    }
+                });
+
+                if(qtdProblemas === 0) htmlProblemas = "<li class='text-gray-500 text-sm py-1'>Nenhum descarte.</li>";
+                if(qtdComputados === 0) htmlComputados = "<li class='text-gray-500 text-sm py-1'>Nenhum cômputo.</li>";
+
+                htmlMeses += `
+                    <details class="group bg-gray-50 border border-gray-200 rounded-lg cursor-pointer">
+                        <summary class="flex justify-between items-center p-4 font-medium hover:bg-gray-100 transition">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                <span class="text-lg text-blue-900 font-bold">${formatarMes(mes)}</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded shadow-sm border border-blue-200">Gasto: ${minutosParaTempo(minMes)}</span>
+                            </div>
+                            <span class="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <div class="px-4 pb-4 bg-white border-t border-gray-200 pt-4 grid grid-cols-1 md:grid-cols-2 gap-6 cursor-default">
+                            <div class="bg-red-50/50 p-4 rounded-lg border border-red-100">
+                                <p class="text-xs font-bold uppercase text-red-800 mb-3 border-b border-red-200 pb-2">❌ Descartes do CNJ (${qtdProblemas} dias)</p>
+                                <ul class="max-h-60 overflow-y-auto pr-2">${htmlProblemas}</ul>
+                            </div>
+                            <div class="bg-green-50/50 p-4 rounded-lg border border-green-100">
+                                <p class="text-xs font-bold uppercase text-green-800 mb-3 border-b border-green-200 pb-2">✅ Dias Computados (${qtdComputados} dias)</p>
+                                <ul class="max-h-60 overflow-y-auto pr-2">${htmlComputados}</ul>
+                            </div>
+                        </div>
+                    </details>
+                `;
+            });
+
+            document.getElementById('container-meses').innerHTML = htmlMeses;
+            
+            let mediaAtualMinutos = somaMinutosGasta / qtdMeses;
+            let orcamento35pts = 5 * 7; 
+            let orcamento20pts = 10 * 7;
+            let orcamento15pts = 60 * 7;
+            
+            let textoStatus = "";
+            let textoExplicacao = "";
+            let limiteMinutos = 0;
+
+            if (somaMinutosGasta < orcamento35pts) {
+                textoStatus = "Buscando Nota Máxima: 35 Pontos";
+                limiteMinutos = orcamento35pts;
+                textoExplicacao = `A franquia do tribunal não estourou!`;
+            } else if (somaMinutosGasta < orcamento20pts) {
+                textoStatus = "Foco Estratégico: 20 Pontos";
+                limiteMinutos = orcamento20pts;
+                textoExplicacao = `A franquia de 35 minutos estourou. Nossa nova franquia total é de 70 min anuais para garantir 20 pontos.`;
+            } else if (somaMinutosGasta < orcamento15pts) {
+                textoStatus = "Estratégia de Defesa: 15 Pontos";
+                limiteMinutos = orcamento15pts;
+                textoExplicacao = `As franquias de 35 e 70 minutos estouraram. Nossa última franquia é de 420 min para garantirmos 15 pontos.`;
+            } else {
+                textoStatus = "Alerta Vermelho: Estouro Crítico";
+                limiteMinutos = 360 * 7;
+                textoExplicacao = `Todas as franquias seguras estouraram.`;
+            }
+
+            let pontosAtuais = 0;
+            if (mediaAtualMinutos < 5) pontosAtuais = 35;
+            else if (mediaAtualMinutos < 10) pontosAtuais = 20;
+            else if (mediaAtualMinutos < 60) pontosAtuais = 15;
+            else if (mediaAtualMinutos <= 360) pontosAtuais = 10;
+
+            document.getElementById('txt-latencia-media').innerText = minutosParaTempo(mediaAtualMinutos);
+            document.getElementById('txt-meses-analisados').innerText = `Divisão: Soma gasta ÷ ${qtdMeses} meses filtrados`;
+            document.getElementById('badge-pontos').innerText = `Situação Atual: ${pontosAtuais} Pontos`;
+            
+            document.getElementById('txt-status-projecao').innerText = textoStatus;
+            document.getElementById('txt-meta-texto').innerText = textoExplicacao;
+            document.getElementById('txt-tempo-gasto').innerText = minutosParaTempo(somaMinutosGasta);
+            document.getElementById('txt-teto-permitido').innerText = minutosParaTempo(limiteMinutos);
+            
+            let mesesFaltantes = 7 - qtdMeses;
+            let sobraEmMinutos = limiteMinutos - somaMinutosGasta;
+            
+            if (mesesFaltantes > 0 && sobraEmMinutos > 0) {
+                document.getElementById('txt-dica-estrategica').innerHTML = `<strong>A MATEMÁTICA DA SOBRA:</strong> Vocês já gastaram ${minutosParaTempo(somaMinutosGasta)}, logo, sobraram <strong>${minutosParaTempo(sobraEmMinutos)}</strong> na franquia de 2026. Isso significa que, nos ${mesesFaltantes} meses restantes, a média de gasto do mês não pode passar de <strong>${minutosParaTempo(sobraEmMinutos / mesesFaltantes)}</strong>.`;
+            } else if (mesesFaltantes > 0 && sobraEmMinutos <= 0) {
+                document.getElementById('txt-dica-estrategica').innerHTML = `<strong>A MATEMÁTICA DA SOBRA:</strong> Franquia atual esgotada.`;
+            } else {
+                document.getElementById('txt-dica-estrategica').innerText = "Apuração encerrada. O saldo e as notas estão consolidados.";
+            }
+        }
+
+        // LEITOR DE ARQUIVO
+        document.getElementById('arquivo-dados').addEventListener('change', function(evento) {
+            let arquivo = evento.target.files[0];
+            if (!arquivo) return;
+            let nome = arquivo.name.toLowerCase();
+            
+            document.getElementById('tela-carregamento').classList.remove('hidden');
+            document.getElementById('painel-resultados').classList.add('hidden');
+
+            let leitor = new FileReader();
+            leitor.onload = function(e) {
+                try {
+                    let dados = e.target.result;
+                    let textoEncontrado = null;
+
+                    if (nome.endsWith('.xlsx')) {
+                        let workbook = XLSX.read(dados, {type: 'array'});
+                        let primeiraAba = workbook.Sheets[workbook.SheetNames[0]];
+                        let matriz = XLSX.utils.sheet_to_json(primeiraAba, {header: 1, raw: false}); 
+                        
+                        for (let r = 0; r < matriz.length; r++) {
+                            if (!matriz[r]) continue;
+                            for (let c = 0; c < matriz[r].length; c++) {
+                                let celula = matriz[r][c];
+                                if (typeof celula === 'string' && celula.includes('"meses"') && celula.includes('"detalhamento"')) {
+                                    textoEncontrado = celula;
+                                    break;
+                                }
+                            }
+                            if (textoEncontrado) break;
+                        }
+                    } else {
+                        textoEncontrado = dados; 
+                    }
+
+                    if (textoEncontrado) {
+                        let inicioJson = textoEncontrado.indexOf('{');
+                        let fimJson = textoEncontrado.lastIndexOf('}') + 1;
+                        let textoCortado = textoEncontrado.substring(inicioJson, fimJson);
+                        inicializarDashboard(textoCortado);
+                    } else {
+                        alert("O formato do Codex não foi encontrado na planilha.");
+                    }
+                } catch (erro) {
+                    alert("Erro interno: " + erro.message);
+                } finally {
+                    document.getElementById('tela-carregamento').classList.add('hidden');
+                }
+            };
+
+            if (nome.endsWith('.xlsx')) leitor.readAsArrayBuffer(arquivo);
+            else leitor.readAsText(arquivo);
+        });
+    </script>
+</body>
+</html>
