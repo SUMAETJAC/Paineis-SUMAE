@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Saneamento DataJud - Prêmio CNJ</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script> 
+
+    <style>
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        input[type="checkbox"] { width: 1.2rem; height: 1.2rem; cursor: pointer; accent-color: #f97316; }
+
+        /* OTIMIZAÇÃO DE PERFORMANCE: inline-block no lugar de flex torna a paginação 10x mais rápida */
+        .process-badge {
+            display: inline-block; 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: #fef2f2; 
+            color: #b91c1c; 
+            border: 1px solid #fecaca; 
+            padding: 0.25rem 0.6rem; 
+            border-radius: 0.375rem; 
+            font-size: 0.75rem; 
+            margin: 0.15rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+        .process-badge:hover {
+            background-color: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .badge-inativo {
+            background-color: #ef4444; 
+            color: white; 
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem; 
+            border-radius: 9999px; 
+            font-weight: bold;
+            text-transform: uppercase; 
+            margin-left: 0.5rem; 
+            vertical-align: middle;
+            letter-spacing: 0.05em;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .file-drop-area {
+            border: 2px dashed;
+            transition: all 0.3s ease;
+        }
+        .file-drop-area:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        .file-drop-area.basicos { border-color: #93c5fd; background-color: #eff6ff; }
+        .file-drop-area.basicos:hover { border-color: #60a5fa; background-color: #dbeafe; }
+        .file-drop-area.assuntos { border-color: #a5b4fc; background-color: #eef2ff; }
+        .file-drop-area.assuntos:hover { border-color: #818cf8; background-color: #e0e7ff; }
+        .file-drop-area.partes { border-color: #d8b4fe; background-color: #faf5ff; }
+        .file-drop-area.partes:hover { border-color: #c084fc; background-color: #f3e8ff; }
+        .file-drop-area.serventias { border-color: #fdba74; background-color: #fff7ed; }
+        .file-drop-area.serventias:hover { border-color: #fb923c; background-color: #ffedd5; }
+
+        /* REGRAS DE IMPRESSÃO - Transforma a página em um PDF perfeito instantaneamente */
+        @media print {
+            body { background: white !important; }
+            /* Oculta tudo que não for o relatório (Upload, Cabeçalhos, Botões) */
+            header, #areaUpload, .no-print, button { display: none !important; }
+            main { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+            #areaParaPDF { box-shadow: none !important; border: none !important; padding: 0 !important; width: 100% !important; }
+            
+            /* Força os navegadores a desenhar as cores de fundo (bg-blue, bg-red, etc) */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Evita cortar a linha principal da unidade a meio, mas PERMITE cortar as listas longas */
+            .unit-row { page-break-inside: avoid !important; page-break-after: auto !important; }
+            .mb-12 { page-break-after: auto !important; margin-bottom: 2rem !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-12">
+
+    <header class="bg-gradient-to-r from-blue-900 to-indigo-800 text-white shadow-lg py-4 px-4 sm:px-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="flex items-center gap-4">
+            <button onclick="window.location.reload()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition px-4 py-2 rounded-lg font-bold shadow-sm border border-white/20 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                Reiniciar
+            </button>
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Saneamento DataJud</h1>
+                <p class="text-blue-200 text-sm mt-1">Monitoramento Estratégico e Qualidade de Dados</p>
+            </div>
+        </div>
+        <div>
+            <a href="index.html" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-500 transition py-2 px-5 rounded-lg font-bold text-white shadow-md flex items-center gap-2 border border-blue-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                Voltar aos Painéis SUMAE
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8 space-y-6">
+
+        <div id="areaUpload" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
+            <h2 class="text-2xl font-bold mb-2 text-gray-800">Iniciar Análise de Inconsistências</h2>
+            <p class="text-gray-600 mb-6 text-sm">Insira as planilhas extraídas do painel. A validação das serventias pode ser feita automaticamente via base interna ou carregando uma planilha atualizada.</p>
+            
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8 text-sm text-slate-800 shadow-sm">
+                <h3 class="font-bold text-lg text-slate-700 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Critérios de Pontuação - Prêmio CNJ (Total: 30 Pontos)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <strong class="block text-blue-700 mb-2 border-b border-blue-100 pb-1 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            a) Dados Básicos (10 pts)
+                        </strong>
+                        <p class="text-[13px] text-gray-600 leading-relaxed">
+                            <strong>a.1)</strong> Todas as unidades judiciárias com <strong>100%</strong> de processos com códigos <code>classeProcessual</code> válidos e que sejam folha (último nível).
+                        </p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <strong class="block text-indigo-700 mb-2 border-b border-indigo-100 pb-1 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M13 7h.01M13 11h.01M13 15h.01M17 7h.01M17 11h.01M17 15h.01"></path></svg>
+                            b) Assuntos (10 pts)
+                        </strong>
+                        <p class="text-[13px] text-gray-600 leading-relaxed">
+                            <strong>b.1)</strong> A partir de <strong>95%</strong> das unidades judiciárias com <strong>99%</strong> dos processos com <code>tipoAssuntoProcessual</code> ou <code>tipoAssuntoLocal</code> válidos (nível folha ou nível 3 ou mais).
+                        </p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <strong class="block text-purple-700 mb-2 border-b border-purple-100 pb-1 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            c) Partes (10 pts)
+                        </strong>
+                        <ul class="text-[13px] text-gray-600 space-y-2 leading-relaxed">
+                            <li><strong>c.1) Ativo (5 pts):</strong> ≥ 95% das unidades possuem > 98% dos processos com documento principal preenchido e válido no polo ativo.</li>
+                            <li><strong>c.2) Passivo (5 pts):</strong> ≥ 95% das unidades possuem > 98% dos processos com documento principal preenchido e válido no polo passivo.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 mt-4 border-t border-gray-100 pt-8">
+                <div>
+                    <label class="font-bold text-blue-900 block mb-2 text-sm uppercase flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Dados Básicos
+                    </label>
+                    <label class="file-drop-area basicos flex flex-col items-center justify-center w-full h-32 rounded-xl cursor-pointer">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <svg class="w-8 h-8 mb-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <p id="nomeBasicos" class="mb-1 text-blue-800 font-bold text-sm">Clique para selecionar</p>
+                        </div>
+                        <input type="file" id="fileBasicos" accept=".xlsx, .csv" class="hidden" onchange="atualizarNomeArquivo(this, 'nomeBasicos', 'text-blue-800')" />
+                    </label>
+                </div>
+
+                <div>
+                    <label class="font-bold text-indigo-900 block mb-2 text-sm uppercase flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M13 7h.01M13 11h.01M13 15h.01M17 7h.01M17 11h.01M17 15h.01"></path></svg>
+                        Assuntos
+                    </label>
+                    <label class="file-drop-area assuntos flex flex-col items-center justify-center w-full h-32 rounded-xl cursor-pointer">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <svg class="w-8 h-8 mb-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <p id="nomeAssuntos" class="mb-1 text-indigo-800 font-bold text-sm">Clique para selecionar</p>
+                        </div>
+                        <input type="file" id="fileAssuntos" accept=".xlsx, .csv" class="hidden" onchange="atualizarNomeArquivo(this, 'nomeAssuntos', 'text-indigo-800')" />
+                    </label>
+                </div>
+
+                <div>
+                    <label class="font-bold text-purple-900 block mb-2 text-sm uppercase flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        Partes
+                    </label>
+                    <label class="file-drop-area partes flex flex-col items-center justify-center w-full h-32 rounded-xl cursor-pointer">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <svg class="w-8 h-8 mb-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <p id="nomePartes" class="mb-1 text-purple-800 font-bold text-sm">Clique para selecionar</p>
+                        </div>
+                        <input type="file" id="filePartes" accept=".xlsx, .csv" class="hidden" onchange="atualizarNomeArquivo(this, 'nomePartes', 'text-purple-800')" />
+                    </label>
+                </div>
+            </div>
+            
+            <div class="bg-orange-50 border-2 border-orange-200 p-5 rounded-xl">
+                <label class="font-bold text-orange-900 block mb-3 text-sm uppercase flex items-center gap-2">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
+                    Base de Serventias
+                </label>
+                
+                <div class="flex items-center mb-4 bg-white p-3 rounded border border-orange-100 shadow-sm inline-flex">
+                    <input type="checkbox" id="checkServentiaNativa" class="mr-3" checked onchange="toggleServentia()">
+                    <label for="checkServentiaNativa" class="text-sm text-orange-900 cursor-pointer font-medium">Usar base interna de mapeamento de Serventias</label>
+                </div>
+
+                <div id="divUploadServentia" class="hidden mt-2">
+                    <label class="text-xs text-orange-700 mb-2 block font-bold">Ou carregue uma planilha de Serventias atualizada:</label>
+                    <label class="file-drop-area serventias flex flex-col items-center justify-center w-full md:w-1/2 h-20 rounded-xl cursor-pointer">
+                        <div class="flex items-center gap-3 px-4">
+                            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            <p id="nomeServentias" class="text-orange-800 font-bold text-sm">Procurar Arquivo</p>
+                        </div>
+                        <input type="file" id="fileServentias" accept=".xlsx, .csv" class="hidden" onchange="atualizarNomeArquivo(this, 'nomeServentias', 'text-orange-800')" />
+                    </label>
+                </div>
+            </div>
+
+            <div id="tela-carregamento" class="hidden mt-8 flex flex-col items-center justify-center p-6 bg-blue-50 border border-blue-200 text-blue-900 rounded-xl shadow-inner">
+                <svg class="spin w-10 h-10 mb-3 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle></svg>
+                <span class="font-bold">A processar ficheiros e a cruzar dados...</span>
+                <span class="text-sm text-blue-700 mt-1">Isto pode demorar alguns segundos dependendo do tamanho das planilhas.</span>
+            </div>
+
+            <button id="btn-processar" onclick="processarDados()" class="mt-8 w-full bg-blue-700 text-white font-bold py-4 rounded-xl hover:bg-blue-600 transition shadow-lg hover:shadow-xl text-lg flex justify-center items-center gap-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> 
+                Gerar Relatório de Saneamento
+            </button>
+        </div>
+
+        <div id="areaRelatorioContainer" class="hidden space-y-6">
+            
+            <div class="no-print flex flex-wrap justify-between gap-3 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <button onclick="voltarInicio()" class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg font-bold shadow-sm hover:bg-gray-200 border border-gray-300 transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Voltar e Analisar Mais
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="baixarPlanilha()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold shadow-sm hover:bg-emerald-700 transition flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Exportar Excel
+                    </button>
+                    <button onclick="window.print()" class="bg-red-600 text-white px-5 py-2.5 rounded-lg font-bold shadow-sm hover:bg-red-700 transition flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        Guardar PDF
+                    </button>
+                </div>
+            </div>
+
+            <div id="areaParaPDF" class="bg-white p-8 md:p-10 rounded-xl shadow-sm border border-gray-200">
+                <div class="text-center mb-10 border-b border-gray-200 pb-8">
+                    <h1 class="text-3xl font-black text-slate-800 mb-2 uppercase tracking-tight">Relatório de Saneamento do DataJud</h1>
+                    <p class="text-slate-500 font-medium">Monitoramento Estratégico - Qualidade de Dados</p>
+                </div>
+
+                <div id="conteudoGerado" class="space-y-16"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        let dadosParaExcel = {};
+
+        // -------------------------------------------------------------
+        // DICIONÁRIO INTERNO DE SERVENTIAS
+        // -------------------------------------------------------------
+      const baseServentiasNativa = {
+    "33567": { nome: "1ª TURMA RECURSAL", status: "ATIVO" },
+    "3612": { nome: "1ª VARA CÍVEL DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "3621": { nome: "1ª VARA CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "3614": { nome: "1ª VARA CRIMINAL DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "3625": { nome: "1ª VARA CRIMINAL DE RIO BRANCO", status: "ATIVO" },
+    "3632": { nome: "1ª VARA DA FAZENDA PÚBLICA DE RIO BRANCO", status: "ATIVO" },
+    "13734": { nome: "1ª VARA DA INFÂNCIA E DA JUVENTUDE DE RIO BRANCO", status: "ATIVO" },
+    "3630": { nome: "1ª VARA DE FAMÍLIA DE RIO BRANCO", status: "ATIVO" },
+    "6379": { nome: "1ª VARA DE PROTEÇÃO À MULHER DE RIO BRANCO", status: "ATIVO" },
+    "3638": { nome: "1ª VARA DO TRIBUNAL DO JÚRI DE RIO BRANCO", status: "ATIVO" },
+    "33549": { nome: "1CÂMARA CÍVEL", status: "ATIVO" },
+    "3644": { nome: "1º IZADO ESPECIAL CRIMINAL DE RIO BRANCO", status: "INATIVO" },
+    "3639": { nome: "1º JUIZADO ESPECIAL CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "3640": { nome: "1º JUIZADO ESPECIAL CIVEL (TRÂNSITO)", status: "INATIVO" },
+    "88896": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 CÍVEL", status: "ATIVO" },
+    "83427": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 CÍVEL", status: "INATIVO" },
+    "83428": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 CRIMINAL", status: "INATIVO" },
+    "88897": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 CRIMINAL", status: "ATIVO" },
+    "86638": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 FAMÍLIA", status: "INATIVO" },
+    "88898": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 FAMÍLIA", status: "ATIVO" },
+    "86641": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 FAZENDA PUBLICA", status: "INATIVO" },
+    "88899": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 FAZENDA PUBLICA", status: "ATIVO" },
+    "88900": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 JUIZADO ESPECIAL CIVEL", status: "ATIVO" },
+    "86639": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 JUIZADO ESPECIAL CIVEL", status: "INATIVO" },
+    "88901": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 VIOLENCIA DOMESTICA", status: "ATIVO" },
+    "86640": { nome: "1º NÚCLEO DE JUSTIÇA 4.0 VIOLENCIA DOMESTICA", status: "INATIVO" },
+    "33572": { nome: "2ª TURMA RECURSAL", status: "ATIVO" },
+    "3613": { nome: "2ª VARA CÍVEL DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "3622": { nome: "2ª VARA CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "3615": { nome: "2ª VARA CRIMINAL DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "81694": { nome: "2ª VARA CRIMINAL DE RIO BRANCO", status: "ATIVO" },
+    "3633": { nome: "2ª VARA DA FAZENDA PÚBLICA DE RIO BRANCO", status: "ATIVO" },
+    "13730": { nome: "2ª VARA DA INFÂNCIA E DA JUVENTUDE DE RIO BRANCO", status: "ATIVO" },
+    "11046": { nome: "2ª VARA DE FAMÍLIA DE RIO BRANCO", status: "ATIVO" },
+    "85404": { nome: "2ª VARA DE PROTEÇÃO À MULHER DE RIO BRANCO", status: "ATIVO" },
+    "16426": { nome: "2ª VARA DO TRIBUNAL DO JÚRI E AUDITORIA MILITAR DE RIO BRANCO", status: "ATIVO" },
+    "33550": { nome: "2CÂMARA CÍVEL", status: "ATIVO" },
+    "3641": { nome: "2º JUIZADO ESPECIAL CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "81693": { nome: "2VARA CRIMINAL", status: "INATIVO" },
+    "16425": { nome: "2VARA DO TRIBUNAL DO JÚRI E AUDITORIA MILITAR", status: "INATIVO" },
+    "3623": { nome: "3ª VARA CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "3628": { nome: "3ª VARA CRIMINAL DE RIO BRANCO", status: "ATIVO" },
+    "3631": { nome: "3ª VARA DE FAMÍLIA DE RIO BRANCO", status: "ATIVO" },
+    "3642": { nome: "3º JUIZADO ESPECIAL CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "3643": { nome: "3º JUIZADO ESPECIAL CÍVEL (JUSTIÇA ITINERANTE)", status: "INATIVO" },
+    "3624": { nome: "4ª VARA CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "17051": { nome: "5ª VARA CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "3627": { nome: "6ª VARA CÍVEL DE RIO BRANCO", status: "ATIVO" },
+    "93334": { nome: "Assessoria de Apoio à Jurisdição - ASSAJ", status: "ATIVO" },
+    "87608": { nome: "ASSESSORIA JURÍDICA VIRTUAL - ASVIR", status: "INATIVO" },
+    "88902": { nome: "ASSESSORIA JURÍDICA VIRTUAL - ASVIR", status: "INATIVO" },
+    "33548": { nome: "CÂMARA CRIMINAL", status: "ATIVO" },
+    "82627": { nome: "CÂMARA DE FÉRIAS", status: "INATIVO" },
+    "81605": { nome: "CÂMARAS CÍVEIS REUNIDAS", status: "ATIVO" },
+    "93337": { nome: "Central de Cálculos - CECAL", status: "ATIVO" },
+    "3618": { nome: "CENTRAL DE EXECUÇÕES DE PENAS ALTERNATIVAS", status: "INATIVO" },
+    "3591": { nome: "CENTRAL DE EXECUÇÕES DE PENAS ALTERNATIVAS", status: "INATIVO" },
+    "3620": { nome: "CENTRAL DE EXECUÇÕES DE PENAS ALTERNATIVAS", status: "INATIVO" },
+    "93338": { nome: "Central de Juízes Leigos e Conciliadores - CELEC", status: "ATIVO" },
+    "93339": { nome: "Central de Justiça Restaurativa - CEJUR", status: "ATIVO" },
+    "81006": { nome: "CENTRAL DE MANDADOS", status: "INATIVO" },
+    "81004": { nome: "CENTRAL DE MANDADOS", status: "INATIVO" },
+    "81741": { nome: "CENTRAL DE MANDADOS DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "88850": { nome: "CENTRAL DE MANDADOS DE RIO BRANCO", status: "ATIVO" },
+    "87600": { nome: "CENTRAL DE PROCESSAMENTO ELETRÔNICO - CEPRE", status: "INATIVO" },
+    "93336": { nome: "Central de Serviços Multidisciplinares - CESEM", status: "ATIVO" },
+    "78577": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA", status: "INATIVO" },
+    "88871": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE ACRELÂNDIA", status: "ATIVO" },
+    "70734": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE ASSIS BRASIL", status: "INATIVO" },
+    "88851": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE ASSIS BRASIL", status: "ATIVO" },
+    "88852": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE BRASILEIA", status: "ATIVO" },
+    "70735": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE BRASILEIA", status: "INATIVO" },
+    "70736": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE BUJARI", status: "INATIVO" },
+    "88853": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE BUJARI", status: "ATIVO" },
+    "88854": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE CAPIXABA", status: "ATIVO" },
+    "70737": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE CAPIXABA", status: "INATIVO" },
+    "88855": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "70738": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE CRUZEIRO DO SUL", status: "INATIVO" },
+    "70740": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE EPITACIOLÂNDIA", status: "INATIVO" },
+    "88856": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE EPITACIOLÂNDIA", status: "ATIVO" },
+    "88857": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE FEIJÓ", status: "ATIVO" },
+    "70741": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE FEIJÓ", status: "INATIVO" },
+    "88858": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE JORDAO", status: "ATIVO" },
+    "87175": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE JORDAO", status: "INATIVO" },
+    "70742": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE MÂNCIO LIMA", status: "INATIVO" },
+    "88859": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE MÂNCIO LIMA", status: "ATIVO" },
+    "70743": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE MANOEL URBANO", status: "INATIVO" },
+    "88860": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE MANOEL URBANO", status: "ATIVO" },
+    "87176": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE MARECHAL THAUMATURGO", status: "INATIVO" },
+    "88861": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE MARECHAL THAUMATURGO", status: "ATIVO" },
+    "70744": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE PLÁCIDO DE CASTRO", status: "INATIVO" },
+    "88862": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE PLÁCIDO DE CASTRO", status: "ATIVO" },
+    "88863": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE PORTO ACRE", status: "ATIVO" },
+    "78576": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE PORTO ACRE", status: "INATIVO" },
+    "87179": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE PORTO WALTER", status: "INATIVO" },
+    "88864": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE PORTO WALTER", status: "ATIVO" },
+    "88875": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE RIO BRANCO", status: "ATIVO" },
+    "70728": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE RIO BRANCO", status: "INATIVO" },
+    "70745": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE RODRIGUES ALVES", status: "INATIVO" },
+    "88865": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE RODRIGUES ALVES", status: "ATIVO" },
+    "87177": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE SANTA ROSA", status: "INATIVO" },
+    "88866": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE SANTA ROSA", status: "ATIVO" },
+    "88867": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE SENADOR GUIOMARD", status: "ATIVO" },
+    "70747": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE SENADOR GUIOMARD", status: "INATIVO" },
+    "70746": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE SENA MADUREIRA", status: "INATIVO" },
+    "88868": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE SENA MADUREIRA", status: "ATIVO" },
+    "70748": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE TARAUACÁ", status: "INATIVO" },
+    "88869": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE TARAUACÁ", status: "ATIVO" },
+    "88870": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE XAPURI", status: "ATIVO" },
+    "70749": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - CEJUSC DE XAPURI", status: "INATIVO" },
+    "70733": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DE ACRELÂNDIA", status: "INATIVO" },
+    "70729": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DOS JUIZADOS ESPECIAIS CÍVEIS DE RIO BRANCO", status: "INATIVO" },
+    "70731": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DOS JUIZADOS ESPECIAIS - FAAO DE RIO BRANCO", status: "INATIVO" },
+    "70730": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DOS JUIZADOS ESPECIAIS - ITINERANTE DE RIO BRANCO", status: "INATIVO" },
+    "70732": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DOS JUIZADOS ESPECIAIS - TRÂNSITO", status: "INATIVO" },
+    "88872": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DOS JUIZADOS ESPECIAIS - TRÂNSITO DE BRASILEIA", status: "INATIVO" },
+    "74384": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DOS JUIZADOS ESPECIAIS - TRÂNSITO DE BRASILEIA", status: "INATIVO" },
+    "70739": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DOS JUIZADOS ESPECIAIS - TRÂNSITO DE CRUZEIRO DO SUL", status: "INATIVO" },
+    "88873": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA DOS JUIZADOS ESPECIAIS - TRÂNSITO DE CRUZEIRO DO SUL", status: "INATIVO" },
+    "88874": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - FAMÍLIA DE RIO BRANCO", status: "INATIVO" },
+    "17991": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA-FAMÍLIA DE RIO BRANCO", status: "INATIVO" },
+    "18083": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - JEC DE RIO BRANCO", status: "INATIVO" },
+    "74385": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS E CIDADANIA - UNINORTE DE RIO BRANCO", status: "INATIVO" },
+    "88909": { nome: "CENTRO JUDICIÁRIO DE SOLUÇÃO DE CONFLITOS EM SAUDE - CEJUSC SAUDE", status: "INATIVO" },
+    "88934": { nome: "CONSELHO DA JUSTIÇA ESTADUAL", status: "ATIVO" },
+    "33565": { nome: "CONSELHO DA JUSTIÇA ESTADUAL", status: "INATIVO" },
+    "81005": { nome: "CONTADORIA", status: "INATIVO" },
+    "88876": { nome: "CONTADORIA", status: "ATIVO" },
+    "87189": { nome: "COORDENAÇÃO DOS JUIZADOS ESPECIAIS", status: "ATIVO" },
+    "18559": { nome: "DIRETORIA DE TECNOLOGIA DA INFORMAÇÃO", status: "INATIVO" },
+    "78644": { nome: "DIRETORIA DO FORO", status: "INATIVO" },
+    "80980": { nome: "DIRETORIA DO FORO DE ACRELANDIA", status: "INATIVO" },
+    "88877": { nome: "DIRETORIA DO FORO DE ACRELANDIA", status: "ATIVO" },
+    "80997": { nome: "DIRETORIA DO FORO DE ASSIS BRASIL", status: "INATIVO" },
+    "88878": { nome: "DIRETORIA DO FORO DE ASSIS BRASIL", status: "ATIVO" },
+    "88879": { nome: "DIRETORIA DO FORO DE BRASILÉIA", status: "ATIVO" },
+    "80999": { nome: "DIRETORIA DO FORO DE BRASILÉIA", status: "INATIVO" },
+    "80983": { nome: "DIRETORIA DO FORO DE BUJARI", status: "INATIVO" },
+    "88880": { nome: "DIRETORIA DO FORO DE BUJARI", status: "ATIVO" },
+    "88881": { nome: "DIRETORIA DO FORO DE CAPIXABA", status: "ATIVO" },
+    "80984": { nome: "DIRETORIA DO FORO DE CAPIXABA", status: "INATIVO" },
+    "80985": { nome: "DIRETORIA DO FORO DE CRUZEIRO DO SUL", status: "INATIVO" },
+    "88882": { nome: "DIRETORIA DO FORO DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "80986": { nome: "DIRETORIA DO FORO DE EPITACIOLÂNDIA", status: "INATIVO" },
+    "88883": { nome: "DIRETORIA DO FORO DE EPITACIOLÂNDIA", status: "ATIVO" },
+    "80987": { nome: "DIRETORIA DO FORO DE FEIJÓ", status: "INATIVO" },
+    "88884": { nome: "DIRETORIA DO FORO DE FEIJÓ", status: "ATIVO" },
+    "88885": { nome: "DIRETORIA DO FORO DE MÂNCIO LIMA", status: "ATIVO" },
+    "80988": { nome: "DIRETORIA DO FORO DE MÂNCIO LIMA", status: "INATIVO" },
+    "88886": { nome: "DIRETORIA DO FORO DE MANOEL URBANO", status: "ATIVO" },
+    "80989": { nome: "DIRETORIA DO FORO DE MANOEL URBANO", status: "INATIVO" },
+    "88887": { nome: "DIRETORIA DO FORO DE PLÁCIDO DE CASTRO", status: "ATIVO" },
+    "80990": { nome: "DIRETORIA DO FORO DE PLÁCIDO DE CASTRO", status: "INATIVO" },
+    "80998": { nome: "DIRETORIA DO FORO DE PORTO ACRE", status: "INATIVO" },
+    "88888": { nome: "DIRETORIA DO FORO DE PORTO ACRE", status: "ATIVO" },
+    "80991": { nome: "DIRETORIA DO FORO DE RIO BRANCO", status: "INATIVO" },
+    "88889": { nome: "DIRETORIA DO FORO DE RIO BRANCO", status: "ATIVO" },
+    "80992": { nome: "DIRETORIA DO FORO DE RODRIGUES ALVES", status: "INATIVO" },
+    "88890": { nome: "DIRETORIA DO FORO DE RODRIGUES ALVES", status: "ATIVO" },
+    "88892": { nome: "DIRETORIA DO FORO DE SENADOR GUIOMARD", status: "ATIVO" },
+    "80994": { nome: "DIRETORIA DO FORO DE SENADOR GUIOMARD", status: "INATIVO" },
+    "80993": { nome: "DIRETORIA DO FORO DE SENA MADUREIRA", status: "INATIVO" },
+    "88891": { nome: "DIRETORIA DO FORO DE SENA MADUREIRA", status: "ATIVO" },
+    "88893": { nome: "DIRETORIA DO FORO DE TARAUACÁ", status: "ATIVO" },
+    "80995": { nome: "DIRETORIA DO FORO DE TARAUACÁ", status: "INATIVO" },
+    "80996": { nome: "DIRETORIA DO FORO DE XAPURI", status: "INATIVO" },
+    "88894": { nome: "DIRETORIA DO FORO DE XAPURI", status: "ATIVO" },
+    "88895": { nome: "DISTRIBUIDOR DE RIO BRANCO", status: "ATIVO" },
+    "81007": { nome: "DISTRIBUIDOR DE RIO BRANCO", status: "INATIVO" },
+    "33566": { nome: "GABINETE DA CORREGEDORIA", status: "INATIVO" },
+    "89559": { nome: "GABINETE DA DES(A) IZAURA MARIA MAIA DE LIMA", status: "INATIVO" },
+    "89573": { nome: "GABINETE DA DESA MIRACELE DE SOUZA LOPES BORGES", status: "INATIVO" },
+    "88693": { nome: "GABINETE DA JUIZA ADAMARCIA MACHADO NASCIMENTO", status: "INATIVO" },
+    "93859": { nome: "GABINETE DA JUIZA ADIMAURA SOUZA DA CRUZ", status: "ATIVO" },
+    "88694": { nome: "GABINETE DA JUIZA CAROLINA ALVARES BRAGANCA", status: "INATIVO" },
+    "86642": { nome: "GABINETE DA JUÍZA EVELIN CAMPOS CERQUEIRA BUENO", status: "INATIVO" },
+    "72893": { nome: "GABINETE DA JUÍZA LILIAN DEISE BRAGA PAIVA", status: "INATIVO" },
+    "81336": { nome: "GABINETE DA JUÍZA LUANA CLÁUDIA DE ALBUQUERQUE CAMPOS", status: "INATIVO" },
+    "79711": { nome: "GABINETE DA JUÍZA MAHA KOUZI MANASFI E MANASFI", status: "INATIVO" },
+    "74212": { nome: "GABINETE DA JUÍZA MARIA ROSINETE DOS REIS SILVA", status: "INATIVO" },
+    "78416": { nome: "GABINETE DA JUIZA MIRLA REGINA DA SILVA CUTRIM", status: "INATIVO" },
+    "83140": { nome: "GABINETE DA JUÍZA OLIVIA MARIA ALVES RIBEIRO", status: "INATIVO" },
+    "74214": { nome: "GABINETE DA JUÍZA OLÍVIA MARIA ALVES RIBEIRO (SUBST. DESª MARIA PENHA)", status: "INATIVO" },
+    "33575": { nome: "GABINETE DA JUIZA ROGERIA JOSE EPAMINONDAS", status: "INATIVO" },
+    "89534": { nome: "GABINETE DA JUIZA SOLANGE DE SOUZA FAGUNDES", status: "INATIVO" },
+    "81335": { nome: "GABINETE DA JUÍZA THAIS QUEIROZ BORGES DE OLIVEIRA ABOU KHALIL", status: "INATIVO" },
+    "89535": { nome: "GABINETE DA JUIZA ZENAIR FERREIRA BUENO", status: "INATIVO" },
+    "72894": { nome: "GABINETE DA JUÍZA ZENICE MOTA CARDOZO", status: "INATIVO" },
+    "81003": { nome: "GABINETE DA PRESIDÊNCIA", status: "INATIVO" },
+    "88935": { nome: "GABINETE DA PRESIDÊNCIA", status: "INATIVO" },
+    "74296": { nome: "GABINETE DA VICE-PRESIDÊNCIA", status: "ATIVO" },
+    "33557": { nome: "GABINETE DO DES.ª DENISE CASTELO BONFIM", status: "ATIVO" },
+    "33559": { nome: "GABINETE DO DES.ª EVA EVANGELISTA DE ARAÚJO SOUZA", status: "INATIVO" },
+    "33552": { nome: "GABINETE DO DES.ª MARIA CEZARINETE DE SOUZA A. ANGELIM", status: "INATIVO" },
+    "33554": { nome: "GABINETE DO DES.ª MARIA PENHA SOUSA NASCIMENTO", status: "INATIVO" },
+    "89570": { nome: "GABINETE DO DES ANANIAS GADELHA FILHO", status: "INATIVO" },
+    "33555": { nome: "GABINETE DO DES.ª REGINA CÉLIA FERRARI LONGUINI", status: "ATIVO" },
+    "89554": { nome: "GABINETE DO DES ARQUILAU DE CASTRO MELO", status: "INATIVO" },
+    "33562": { nome: "GABINETE DO DES.ª WALDIRENE OLIVEIRA DA CRUZ LIMA CORDEIRO", status: "ATIVO" },
+    "89555": { nome: "GABINETE DO DES CIRO FACUNDO DE ALMEIDA", status: "INATIVO" },
+    "75537": { nome: "GABINETE DO DES. ELCIO SABO MENDES JÚNIOR", status: "ATIVO" },
+    "89571": { nome: "GABINETE DO DES ELIEZER MATTOS SCHERRER", status: "INATIVO" },
+    "89556": { nome: "GABINETE DO DES FELICIANO VASCONCELOS DE OLIVEIRA", status: "INATIVO" },
+    "89557": { nome: "GABINETE DO DES FRANCISCO DAS CHAGAS PRAÇA", status: "INATIVO" },
+    "33556": { nome: "GABINETE DO DES. FRANCISCO DJALMA DA SILVA", status: "ATIVO" },
+    "89558": { nome: "GABINETE DO DES GERCINO JOSE DA SILVA FILHO", status: "INATIVO" },
+    "89560": { nome: "GABINETE DO DES JERSEY PACHECO NUNES", status: "INATIVO" },
+    "33558": { nome: "GABINETE DO DES. JÚNIOR ALBERTO RIBEIRO", status: "ATIVO" },
+    "33553": { nome: "GABINETE DO DES. LAUDIVON DE OLIVEIRA NOGUEIRA", status: "ATIVO" },
+    "90335": { nome: "GABINETE DO DES. LOIS CARLOS ARRUDA", status: "ATIVO" },
+    "89572": { nome: "GABINETE DO DES LOURIVAL ALVES DA SILVA", status: "INATIVO" },
+    "79447": { nome: "GABINETE DO DES. LUÍS VITÓRIO CAMOLEZ", status: "ATIVO" },
+    "33551": { nome: "GABINETE DO DES. PEDRO RANZI", status: "INATIVO" },
+    "88015": { nome: "GABINETE DO DES. RAIMUNDO NONATO DA COSTA MAIA", status: "ATIVO" },
+    "33561": { nome: "GABINETE DO DES. ROBERTO BARROS DOS SANTOS", status: "ATIVO" },
+    "33560": { nome: "GABINETE DO DES. SAMOEL MARTINS EVANGELISTA", status: "ATIVO" },
+    "89574": { nome: "GABINETE DO DES WANDERLEY OLIVEIRA", status: "INATIVO" },
+    "89533": { nome: "GABINETE DO JUIZ AFONSO BRANA MUNIZ", status: "INATIVO" },
+    "33568": { nome: "GABINETE DO JUIZ ALESSON JOSÉ SANTOS BRAZ", status: "INATIVO" },
+    "33569": { nome: "GABINETE DO JUIZ ANASTÁCIO LIMA DE MENEZES FILHO", status: "INATIVO" },
+    "81337": { nome: "GABINETE DO JUIZ CLOVES AUGUSTO ALVES CABRAL FERREIRA", status: "INATIVO" },
+    "91167": { nome: "GABINETE DO JUIZ CLOVES AUGUSTO ALVES CABRAL FERREIRA", status: "INATIVO" },
+    "91168": { nome: "GABINETE DO JUIZ CLOVIS DE SOUZA LODI", status: "ATIVO" },
+    "33570": { nome: "GABINETE DO JUIZ DANNIEL GUSTAVO BOMFIM ARAÚJO DA SILVA", status: "ATIVO" },
+    "74211": { nome: "GABINETE DO JUÍZ ELCIO SABO MENDES JUNIOR", status: "INATIVO" },
+    "93858": { nome: "GABINETE DO JUIZ ERIK DA FONSECA FARHAT", status: "ATIVO" },
+    "74213": { nome: "GABINETE DO JUÍZ FERNANDO NÓBREGA DA SILVA", status: "INATIVO" },
+    "33573": { nome: "GABINETE DO JUIZ GILBERTO MATOS DE  ARAÚJO", status: "ATIVO" },
+    "83141": { nome: "GABINETE DO JUIZ GIORDANE DE SOUZA DOURADO", status: "INATIVO" },
+    "93860": { nome: "GABINETE DO JUIZ GUILHERME APARECIDO DO NASCIMENTO FRAGA", status: "ATIVO" },
+    "82427": { nome: "GABINETE DO JUIZ HUGO BARBOSA TORQUATO FERREIRA", status: "INATIVO" },
+    "33574": { nome: "GABINETE DO JUIZ JOSÉ AUGUSTO CUNHA FONTES DA SILVA", status: "INATIVO" },
+    "79480": { nome: "GABINETE DO JUIZ JOSÉ WAGNER FREITAS PEDROSA ALCÂNTARA", status: "INATIVO" },
+    "81604": { nome: "GABINETE DO JUIZ MARCELO BADARÓ DUARTE", status: "INATIVO" },
+    "93857": { nome: "GABINETE DO JUIZ MARCELO COELHO DE CARVALHO", status: "ATIVO" },
+    "76534": { nome: "GABINETE DO JUIZ MARCELO COELHO DE CARVALHO", status: "INATIVO" },
+    "33571": { nome: "GABINETE DO JUIZ MARCOS THADEU DE ANDRADE MATIAS", status: "INATIVO" },
+    "88692": { nome: "GABINETE DO JUIZ MARLON MARTINS MACHADO", status: "ATIVO" },
+    "75538": { nome: "GABINETE DO JUIZ RAIMUNDO NONATO DA COSTA MAIA", status: "INATIVO" },
+    "79446": { nome: "GABINETE DO JUIZ ROBSON RIBEIRO ALEIXO", status: "INATIVO" },
+    "33576": { nome: "GABINETE DO SHIRLEI DE OLIVEIRA HAGE MENEZES", status: "INATIVO" },
+    "74386": { nome: "GABINETE MARCELO COELHO DE CARVALHO - 2º GRAU", status: "INATIVO" },
+    "3634": { nome: "JUIZADO DA INFÂNCIA E DA JUVENTUDE", status: "INATIVO" },
+    "3606": { nome: "JUIZADO ESPECIAL CÍVEL", status: "INATIVO" },
+    "3610": { nome: "JUIZADO ESPECIAL CÍVEL", status: "INATIVO" },
+    "3602": { nome: "JUIZADO ESPECIAL CÍVEL", status: "INATIVO" },
+    "3594": { nome: "JUIZADO ESPECIAL CÍVEL", status: "INATIVO" },
+    "3598": { nome: "JUIZADO ESPECIAL CÍVEL", status: "INATIVO" },
+    "3589": { nome: "JUIZADO ESPECIAL CÍVEL", status: "INATIVO" },
+    "3616": { nome: "JUIZADO ESPECIAL CÍVEL E DE FAZENDA PÚBLICA DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "3590": { nome: "JUIZADO ESPECIAL CRIMINAL", status: "INATIVO" },
+    "3595": { nome: "JUIZADO ESPECIAL CRIMINAL", status: "INATIVO" },
+    "3599": { nome: "JUIZADO ESPECIAL CRIMINAL", status: "INATIVO" },
+    "3617": { nome: "JUIZADO ESPECIAL CRIMINAL", status: "INATIVO" },
+    "3607": { nome: "JUIZADO ESPECIAL CRIMINAL", status: "INATIVO" },
+    "3611": { nome: "JUIZADO ESPECIAL CRIMINAL", status: "INATIVO" },
+    "3603": { nome: "JUIZADO ESPECIAL CRIMINAL", status: "INATIVO" },
+    "3645": { nome: "JUIZADO ESPECIAL CRIMINAL DE RIO BRANCO", status: "ATIVO" },
+    "17053": { nome: "JUIZADO ESPECIAL DA FAZENDA PÚBLICA DE RIO BRANCO", status: "ATIVO" },
+    "78888": { nome: "N", status: "INATIVO" },
+    "78643": { nome: "NOVO ÓRGÃO", status: "INATIVO" },
+    "88014": { nome: "NÚCLEO DE APOIO TÉCNICO ÀS VARAS DA INFÂNCIA E JUVENTUDE DE RIO BRANCO", status: "ATIVO" },
+    "78580": { nome: "NÚCLEO DE APRESENTAÇÃO", status: "INATIVO" },
+    "18552": { nome: "NÚCLEO DE AUDIÊNCIA DE APRESENTAÇÃO", status: "INATIVO" },
+    "18551": { nome: "NÚCLEO DE AUDIÊNCIA DE APRESENTAÇÃO DE RIO BRANCO", status: "INATIVO" },
+    "80358": { nome: "PLANTÃO JUDICIÁRIO DO 2º GRAU", status: "ATIVO" },
+    "88936": { nome: "PRESIDÊNCIA - PRECATÓRIOS", status: "ATIVO" },
+    "82626": { nome: "PRESIDÊNCIA - PRECATÓRIOS", status: "INATIVO" },
+    "93335": { nome: "Secretaria de Apoio à Jurisdição - SEAJU", status: "ATIVO" },
+    "81518": { nome: "SECRETARIA JUDICIÁRIA", status: "ATIVO" },
+    "88937": { nome: "TRIBUNAL PLENO ADMINISTRATIVO", status: "INATIVO" },
+    "33564": { nome: "TRIBUNAL PLENO ADMINISTRATIVO", status: "INATIVO" },
+    "33563": { nome: "TRIBUNAL PLENO JURISDICIONAL", status: "ATIVO" },
+    "81836": { nome: "TURMA DE UNIFORMIZAÇÃO DE JURISPRUDÊNCIA", status: "ATIVO" },
+    "81936": { nome: "VARA BACENJUD MIGRADA", status: "INATIVO" },
+    "3592": { nome: "VARA CÍVEL", status: "INATIVO" },
+    "3596": { nome: "VARA CÍVEL", status: "INATIVO" },
+    "3600": { nome: "VARA CÍVEL", status: "INATIVO" },
+    "11674": { nome: "VARA CÍVEL DE BRASILÉIA", status: "ATIVO" },
+    "8153": { nome: "VARA CÍVEL DE FEIJÓ", status: "ATIVO" },
+    "3604": { nome: "VARA CÍVEL DE SENADOR GUIOMARD", status: "ATIVO" },
+    "3608": { nome: "VARA CÍVEL DE SENA MADUREIRA", status: "ATIVO" },
+    "8155": { nome: "VARA CÍVEL DE TARAUACÁ", status: "ATIVO" },
+    "3593": { nome: "VARA CRIMINAL", status: "INATIVO" },
+    "3597": { nome: "VARA CRIMINAL", status: "INATIVO" },
+    "3588": { nome: "VARA CRIMINAL DE BRASILÉIA", status: "ATIVO" },
+    "8154": { nome: "VARA CRIMINAL DE FEIJÓ", status: "ATIVO" },
+    "3601": { nome: "VARA CRIMINAL (DESATIVADA)", status: "INATIVO" },
+    "3605": { nome: "VARA CRIMINAL DE SENADOR GUIOMARD", status: "ATIVO" },
+    "3609": { nome: "VARA CRIMINAL DE SENA MADUREIRA", status: "ATIVO" },
+    "8156": { nome: "VARA CRIMINAL DE TARAUACÁ", status: "ATIVO" },
+    "3619": { nome: "VARA DA AUDITORIA MILTAR", status: "INATIVO" },
+    "16493": { nome: "VARA DA INFÂNCIA E JUVENTUDE DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "88663": { nome: "VARA DE APOIO À JURISDIÇÃO - VAJUR", status: "ATIVO" },
+    "3626": { nome: "VARA DE DELITOS DE ORGANIZAÇÕES CRIMINOSAS DE RIO BRANCO", status: "ATIVO" },
+    "79522": { nome: "VARA DE DELITOS DE ROUBO E EXTORSÃO", status: "INATIVO" },
+    "79521": { nome: "VARA DE DELITOS DE ROUBOS E EXTORSÃO DE RIO BRANCO", status: "ATIVO" },
+    "3637": { nome: "VARA DE DELITOS TÓXICOS E ACIDENTE DE TRÂNSITO", status: "INATIVO" },
+    "3629": { nome: "VARA DE EXECUÇÃO DE PENAS NO REGIME FECHADO", status: "ATIVO" },
+    "17052": { nome: "VARA DE EXECUÇÃO FISCAL DE RIO BRANCO", status: "ATIVO" },
+    "14075": { nome: "VARA DE EXECUÇÕES PENAS E MEDIDAS ALTERNATIVAS DE RIO BRANCO", status: "ATIVO" },
+    "3635": { nome: "VARA DE ÓRFÃOS E SUCESSÕES", status: "INATIVO" },
+    "77852": { nome: "VARA DE PLANTÃO DE ACRELÂNDIA", status: "INATIVO" },
+    "77859": { nome: "VARA DE PLANTÃO DE ASSIS BRASIL", status: "INATIVO" },
+    "77843": { nome: "VARA DE PLANTÃO DE BRASILÉIA", status: "INATIVO" },
+    "77853": { nome: "VARA DE PLANTÃO DE BUJARI", status: "INATIVO" },
+    "77854": { nome: "VARA DE PLANTÃO DE CAPIXABA", status: "INATIVO" },
+    "77849": { nome: "VARA DE PLANTÃO DE CRUZEIRO DO SUL", status: "INATIVO" },
+    "77845": { nome: "VARA DE PLANTÃO DE EPITACIOLÂNDIA", status: "INATIVO" },
+    "77856": { nome: "VARA DE PLANTÃO DE FEIJÓ", status: "INATIVO" },
+    "77851": { nome: "VARA DE PLANTÃO DE MÂNCIO LIMA", status: "INATIVO" },
+    "77855": { nome: "VARA DE PLANTÃO DE MANOEL URBANO", status: "INATIVO" },
+    "77846": { nome: "VARA DE PLANTÃO DE PLÁCIDO DE CASTRO", status: "INATIVO" },
+    "77861": { nome: "VARA DE PLANTÃO DE PORTO ACRE", status: "INATIVO" },
+    "77850": { nome: "VARA DE PLANTÃO DE RIO BRANCO", status: "INATIVO" },
+    "77860": { nome: "VARA DE PLANTÃO DE RODRIGUES ALVES", status: "INATIVO" },
+    "77847": { nome: "VARA DE PLANTÃO DE SENADOR GUIOMARD", status: "INATIVO" },
+    "77848": { nome: "VARA DE PLANTÃO DE SENA MADUREIRA", status: "INATIVO" },
+    "77857": { nome: "VARA DE PLANTÃO DE TARAUACÁ", status: "INATIVO" },
+    "77844": { nome: "VARA DE PLANTÃO DE XAPURI", status: "INATIVO" },
+    "74300": { nome: "VARA DE PROTEÇÃO À MULHER E EXECUÇÕES PENAIS DE CRUZEIRO DO SUL", status: "ATIVO" },
+    "3636": { nome: "VARA DE REGISTROS PÚBLICOS, ÓRFÃOS E SUCESSÕES E DE CARTAS PRECATÓRIAS CÍVEIS DE RIO BRANCO", status: "ATIVO" },
+    "89612": { nome: "VARA ESTADUAL DO JUIZ DAS GARANTIAS", status: "ATIVO" },
+    "8149": { nome: "VARA ÚNICA DE ACRELÂNDIA", status: "ATIVO" },
+    "16317": { nome: "VARA ÚNICA DE ASSIS BRASIL", status: "ATIVO" },
+    "8150": { nome: "VARA ÚNICA DE BUJARI", status: "ATIVO" },
+    "8151": { nome: "VARA ÚNICA DE CAPIXABA", status: "ATIVO" },
+    "17049": { nome: "VARA ÚNICA DE EPITACIOLÂNDIA", status: "ATIVO" },
+    "8148": { nome: "VARA ÚNICA DE MÂNCIO LIMA", status: "ATIVO" },
+    "8152": { nome: "VARA ÚNICA DE MANOEL URBANO", status: "ATIVO" },
+    "17050": { nome: "VARA ÚNICA DE PLÁCIDO DE CASTRO", status: "ATIVO" },
+    "74302": { nome: "VARA ÚNICA DE PORTO ACRE", status: "ATIVO" },
+    "33547": { nome: "VARA ÚNICA DE RODRIGUES ALVES", status: "ATIVO" },
+    "17054": { nome: "VARA ÚNICA DE XAPURI", status: "ATIVO" },
+};
+
+
+        function atualizarNomeArquivo(input, pId, colorClassDefault) {
+            const displayElement = document.getElementById(pId);
+            if (input.files && input.files.length > 0) {
+                displayElement.textContent = input.files[0].name;
+                displayElement.className = "mb-1 font-bold text-sm text-emerald-600";
+            } else {
+                displayElement.textContent = 'Clique para selecionar';
+                displayElement.className = "mb-1 font-bold text-sm " + colorClassDefault;
+            }
+        }
+
+        function toggleServentia() {
+            const usarNativa = document.getElementById('checkServentiaNativa').checked;
+            const divUpload = document.getElementById('divUploadServentia');
+            if (usarNativa) {
+                divUpload.classList.add('hidden');
+                document.getElementById('fileServentias').value = ''; 
+                document.getElementById('nomeServentias').textContent = 'Procurar Arquivo';
+            } else {
+                divUpload.classList.remove('hidden');
+            }
+        }
+
+        function voltarInicio() {
+            document.getElementById('areaRelatorioContainer').classList.add('hidden');
+            document.getElementById('areaUpload').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function lerArquivo(file) {
+            return new Promise((resolve) => {
+                if (!file) return resolve([]);
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const primeiraAba = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonCru = XLSX.utils.sheet_to_json(primeiraAba, {defval: ""});
+                    
+                    const jsonLimpo = jsonCru.map(linha => {
+                        let novaLinha = {};
+                        for (let chave in linha) novaLinha[chave.trim()] = linha[chave];
+                        return novaLinha;
+                    });
+                    resolve(jsonLimpo);
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function extrairProcessos(stringLista) {
+            if (!stringLista || stringLista === "{}" || stringLista === "-" || stringLista.trim() === "") return [];
+            let limpo = stringLista.replace(/{|}/g, '').replace(/"/g, '').trim();
+            if (!limpo) return [];
+            return limpo.split(',').map(p => p.trim()).filter(p => p !== "");
+        }
+
+        async function processarDados() {
+            const fileBasicos = document.getElementById('fileBasicos').files[0];
+            const fileAssuntos = document.getElementById('fileAssuntos').files[0];
+            const filePartes = document.getElementById('filePartes').files[0];
+            const usarNativa = document.getElementById('checkServentiaNativa').checked;
+            const fileServentias = document.getElementById('fileServentias').files[0];
+
+            if (!fileBasicos && !fileAssuntos && !filePartes) {
+                alert("Por favor, insira pelo menos um arquivo de dados (Básicos, Assuntos ou Partes) para análise.");
+                return;
+            }
+
+            if (!usarNativa && !fileServentias) {
+                alert("Aviso: Escolheste NÃO usar a base interna, mas não anexaste nenhuma planilha de Serventias.");
+                return;
+            }
+
+            document.getElementById('btn-processar').classList.add('hidden');
+            document.getElementById('tela-carregamento').classList.remove('hidden');
+
+            setTimeout(async () => {
+                try {
+                    const dadosBasicos = await lerArquivo(fileBasicos);
+                    const dadosAssuntos = await lerArquivo(fileAssuntos);
+                    const dadosPartes = await lerArquivo(filePartes);
+                    let mapaServentias = {};
+
+                    if (usarNativa) {
+                        mapaServentias = baseServentiasNativa;
+                    } else {
+                        const dadosServentias = await lerArquivo(fileServentias);
+                        if (dadosServentias.length > 0) {
+                            dadosServentias.forEach(row => {
+                                let keyCod = Object.keys(row).find(k => k.toLowerCase().includes('código') || k.toLowerCase() === 'cod_orgao');
+                                let keyNome = Object.keys(row).find(k => k.toLowerCase().includes('nome') || k.toLowerCase() === 'dsc_orgao');
+                                let keyStatus = Object.keys(row).find(k => k.toLowerCase().includes('status'));
+
+                                let cod = keyCod ? String(row[keyCod]).replace('.0', '').trim() : null;
+                                if (cod) {
+                                    mapaServentias[cod] = {
+                                        nome: keyNome ? row[keyNome] : cod,
+                                        status: keyStatus ? String(row[keyStatus]).toUpperCase().trim() : 'ATIVO'
+                                    };
+                                }
+                            });
+                        }
+                    }
+
+                    dadosParaExcel = {};
+                    let htmlFinal = "";
+                    let unidadesInativasComErroGeral = [];
+
+                    const themeBasicos = { text: 'text-blue-700', border: 'border-blue-500', bg: 'bg-blue-50', badge: 'bg-blue-100 text-blue-800' };
+                    const themeAssuntos = { text: 'text-indigo-700', border: 'border-indigo-500', bg: 'bg-indigo-50', badge: 'bg-indigo-100 text-indigo-800' };
+                    const themeAtivo = { text: 'text-purple-700', border: 'border-purple-500', bg: 'bg-purple-50', badge: 'bg-purple-100 text-purple-800' };
+                    const themePassivo = { text: 'text-pink-700', border: 'border-pink-500', bg: 'bg-pink-50', badge: 'bg-pink-100 text-pink-800' };
+
+                    if (dadosBasicos.length > 0) {
+                        let r = gerarSecao(dadosBasicos, "A. Dados Básicos", "dsc_orgao", "arquivos_orgaos", ["lista.classeProcessual_invalida"], themeBasicos, mapaServentias);
+                        htmlFinal += r.html;
+                        unidadesInativasComErroGeral.push(...r.inativas);
+                    }
+                    if (dadosAssuntos.length > 0) {
+                        let r = gerarSecao(dadosAssuntos, "B. Assuntos", "dsc_orgao", "arquivos_orgaos", ["lista.assuntos_invalidos"], themeAssuntos, mapaServentias);
+                        htmlFinal += r.html;
+                        unidadesInativasComErroGeral.push(...r.inativas);
+                    }
+                    if (dadosPartes.length > 0) {
+                        let rAtivo = gerarSecao(dadosPartes, "C.1 Partes (Polo Ativo)", "cod_orgao", "processos_polo_ativo_recorte_premio", ["lista.proc_polo_ativo_doc_invalido"], themeAtivo, mapaServentias);
+                        htmlFinal += rAtivo.html;
+                        unidadesInativasComErroGeral.push(...rAtivo.inativas);
+
+                        let rPassivo = gerarSecao(dadosPartes, "C.2 Partes (Polo Passivo)", "cod_orgao", "processos_polo_passivo_recorte_premio", ["lista.proc_polo_passivo_doc_invalido"], themePassivo, mapaServentias);
+                        htmlFinal += rPassivo.html;
+                        unidadesInativasComErroGeral.push(...rPassivo.inativas);
+                    }
+
+                    document.getElementById('conteudoGerado').innerHTML = htmlFinal;
+                    document.getElementById('areaRelatorioContainer').classList.remove('hidden');
+                    document.getElementById('areaUpload').style.display = 'none';
+
+                    let inativasUnicas = [...new Set(unidadesInativasComErroGeral)];
+                    if (inativasUnicas.length > 0) {
+                        setTimeout(() => {
+                            alert(`ATENÇÃO: INCONSISTÊNCIAS EM UNIDADES INATIVAS\n\nForam encontrados processos para corrigir nas seguintes unidades inativas:\n\n- ${inativasUnicas.join('\n- ')}\n\nVerifique o relatório para mais detalhes.`);
+                        }, 500);
+                    }
+                } catch(e) {
+                    alert("Ocorreu um erro ao processar: " + e.message);
+                } finally {
+                    document.getElementById('btn-processar').classList.remove('hidden');
+                    document.getElementById('tela-carregamento').classList.add('hidden');
+                }
+            }, 500);
+        }
+
+        function gerarSecao(dados, tituloSecao, colunaUnidade, colunaAnalisados, colunasErros, theme, mapaServentias) {
+            let totalAnalisados = 0;
+            let totalErros = 0;
+            let unidades = {};
+            let listaParaAbaExcel = [];
+            let inativasNestaSecao = []; 
+
+            dados.forEach(linha => {
+                let originalID = String(linha[colunaUnidade]).replace('.0', '').trim();
+                if (!originalID || originalID === 'undefined') return;
+
+                let nomeDisplay = originalID;
+                let status = 'ATIVO';
+
+                if (mapaServentias && mapaServentias[originalID]) {
+                    nomeDisplay = mapaServentias[originalID].nome;
+                    status = mapaServentias[originalID].status;
+                }
+
+                if (!unidades[originalID]) {
+                    unidades[originalID] = { 
+                        nomeExibicao: nomeDisplay, 
+                        status: status,
+                        analisados: 0, 
+                        listaProcessos: [] 
+                    };
+                }
+
+                let qtdAnalisados = parseInt(linha[colunaAnalisados]) || 0;
+                unidades[originalID].analisados += qtdAnalisados;
+                totalAnalisados += qtdAnalisados;
+
+                colunasErros.forEach(col => {
+                    let processosExtraidos = extrairProcessos(linha[col]);
+                    unidades[originalID].listaProcessos.push(...processosExtraidos);
+                });
+            });
+
+            let unidadesComErro = Object.keys(unidades)
+                .map(key => {
+                    let obj = unidades[key];
+                    let procs = [...new Set(obj.listaProcessos)];
+                    let erros = procs.length;
+                    let validos = obj.analisados - erros;
+                    if (validos < 0) validos = 0;
+                    let taxaValidos = obj.analisados > 0 ? ((validos / obj.analisados) * 100).toFixed(2) : "0.00";
+                    let inativo = obj.status.includes('INATIVO');
+
+                    listaParaAbaExcel.push({
+                        "Unidade/Órgão (Código)": key,
+                        "Nome da Unidade": obj.nomeExibicao,
+                        "Status": obj.status,
+                        "Analisados": obj.analisados,
+                        "Válidos": validos,
+                        "Inconsistências": erros,
+                        "Taxa de Válidos (%)": parseFloat(taxaValidos),
+                        "Processos com Erro": procs.join(', ')
+                    });
+
+                    return {
+                        codigo: key, nome: obj.nomeExibicao, inativo: inativo,
+                        analisados: obj.analisados, validos: validos,
+                        taxaValidos: taxaValidos, processos: procs
+                    };
+                })
+                .filter(u => u.processos.length > 0)
+                .sort((a, b) => b.processos.length - a.processos.length);
+
+            unidadesComErro.forEach(u => {
+                totalErros += u.processos.length;
+                if (u.inativo) inativasNestaSecao.push(u.nome);
+            });
+            
+            // Aqui garantimos que o Excel filtrado só receba os dados relevantes
+            dadosParaExcel[tituloSecao] = listaParaAbaExcel.filter(item => item["Inconsistências"] > 0);
+
+            let validosGeral = totalAnalisados - totalErros;
+            if(validosGeral < 0) validosGeral = 0;
+            let taxaValidosGeral = totalAnalisados > 0 ? ((validosGeral / totalAnalisados) * 100).toFixed(2) : "0.00";
+
+            let html = `<div class="mb-12">`;
+            
+            // Cabeçalho da Secção
+            html += `<div class="flex items-center gap-3 mb-6">
+                        <div class="h-8 w-2 rounded-full bg-${theme.border.split('-')[1]}-500"></div>
+                        <h2 class="text-2xl font-bold ${theme.text} uppercase tracking-tight">${tituloSecao}</h2>
+                     </div>`;
+            
+            // Resumo (Cards)
+            html += `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white border-t-4 border-slate-300 shadow-sm rounded-b-xl p-5 text-center">
+                        <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Avaliado</span>
+                        <span class="text-3xl font-black text-slate-700">${totalAnalisados.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div class="bg-white border-t-4 border-emerald-400 shadow-sm rounded-b-xl p-5 text-center">
+                        <span class="block text-xs font-bold text-emerald-500 uppercase tracking-wider mb-2">Válidos</span>
+                        <span class="text-3xl font-black text-emerald-600">${validosGeral.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div class="bg-white border-t-4 border-red-400 shadow-sm rounded-b-xl p-5 text-center">
+                        <span class="block text-xs font-bold text-red-500 uppercase tracking-wider mb-2">Inconsistências</span>
+                        <span class="text-3xl font-black text-red-600">${totalErros.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div class="bg-white border-t-4 border-blue-400 shadow-sm rounded-b-xl p-5 text-center">
+                        <span class="block text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">Taxa Global</span>
+                        <span class="text-3xl font-black text-blue-600">${taxaValidosGeral}%</span>
+                    </div>
+                </div>`;
+
+            // Tabela Modernizada
+            if (unidadesComErro.length > 0) {
+                html += `
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500">
+                                <th class="p-4 font-bold w-1/2">Unidade / Órgão</th>
+                                <th class="p-4 font-bold text-center">Analisados</th>
+                                <th class="p-4 font-bold text-center">Inconsistências</th>
+                                <th class="p-4 font-bold text-center">Taxa Válidos</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">`;
+                
+                unidadesComErro.forEach(u => {
+                    let badgesProcessos = u.processos.map(proc => `<span class="process-badge">${proc}</span>`).join('');
+                    let tagInativo = u.inativo ? `<span class="badge-inativo">Inativa</span>` : '';
+
+                    // REMOVIDO: O "page-break-inside: avoid" que causava o congelamento no Ctrl+P
+                    html += `
+                        <tr class="unit-row hover:bg-gray-50 transition border-b border-gray-100">
+                            <td class="p-4">
+                                <p class="font-bold text-gray-800 text-sm flex items-center flex-wrap gap-2">
+                                    ${u.nome} ${tagInativo}
+                                </p>
+                            </td>
+                            <td class="p-4 text-center text-gray-600 font-medium text-sm">${u.analisados.toLocaleString('pt-BR')}</td>
+                            <td class="p-4 text-center">
+                                <span class="bg-red-100 text-red-800 font-bold px-2.5 py-1 rounded-full text-xs border border-red-200 shadow-sm">
+                                    ${u.processos.length.toLocaleString('pt-BR')}
+                                </span>
+                            </td>
+                            <td class="p-4 text-center text-emerald-600 font-bold text-sm">${u.taxaValidos}%</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="p-4 pt-1 pb-5 bg-gray-50/30">
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Processos listados (${u.processos.length}):</div>
+                                <div class="block leading-relaxed">${badgesProcessos}</div>
+                            </td>
+                        </tr>`;
+                });
+                
+                html += `</tbody></table></div>`;
+            } else {
+                html += `
+                <div class="bg-emerald-50 border border-emerald-200 p-6 rounded-xl text-center shadow-sm">
+                    <p class="text-emerald-700 font-bold text-lg flex items-center justify-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Nenhuma unidade possui inconsistência nesta categoria. Parabéns!
+                    </p>
+                </div>`;
+            }
+
+            html += `</div>`;
+            return { html: html, inativas: inativasNestaSecao };
+        }
+
+        function baixarPlanilha() {
+            const wb = XLSX.utils.book_new();
+            for (let categoria in dadosParaExcel) {
+                let dadosDaAba = dadosParaExcel[categoria];
+                if (dadosDaAba.length > 0) {
+                    const ws = XLSX.utils.json_to_sheet(dadosDaAba);
+                    let nomeAbaCurto = categoria.substring(0, 31).replace(/[\\/?*\[\]:]/g, '');
+                    XLSX.utils.book_append_sheet(wb, ws, nomeAbaCurto);
+                }
+            }
+            XLSX.writeFile(wb, "Saneamento_DataJud_Consolidado.xlsx");
+        }
+    </script>
+</body>
+</html>
