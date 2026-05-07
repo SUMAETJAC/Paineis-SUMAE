@@ -17,7 +17,6 @@
         
         input[type="checkbox"] { width: 1.2rem; height: 1.2rem; cursor: pointer; accent-color: #f97316; }
 
-        /* OTIMIZAÇÃO DE PERFORMANCE: inline-block no lugar de flex torna a paginação 10x mais rápida */
         .process-badge {
             display: inline-block; 
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -58,30 +57,23 @@
         
         .file-drop-area.basicos { border-color: #93c5fd; background-color: #eff6ff; }
         .file-drop-area.basicos:hover { border-color: #60a5fa; background-color: #dbeafe; }
+        
         .file-drop-area.assuntos { border-color: #a5b4fc; background-color: #eef2ff; }
         .file-drop-area.assuntos:hover { border-color: #818cf8; background-color: #e0e7ff; }
+        
         .file-drop-area.partes { border-color: #d8b4fe; background-color: #faf5ff; }
         .file-drop-area.partes:hover { border-color: #c084fc; background-color: #f3e8ff; }
+        
         .file-drop-area.serventias { border-color: #fdba74; background-color: #fff7ed; }
         .file-drop-area.serventias:hover { border-color: #fb923c; background-color: #ffedd5; }
 
-        /* REGRAS DE IMPRESSÃO - Transforma a página em um PDF perfeito instantaneamente */
         @media print {
             body { background: white !important; }
-            /* Oculta tudo que não for o relatório (Upload, Cabeçalhos, Botões) */
             header, #areaUpload, .no-print, button { display: none !important; }
             main { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
             #areaParaPDF { box-shadow: none !important; border: none !important; padding: 0 !important; width: 100% !important; }
-            
-            /* Força os navegadores a desenhar as cores de fundo (bg-blue, bg-red, etc) */
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
-            /* Evita cortar a linha principal da unidade a meio, mas PERMITE cortar as listas longas */
-            .unit-row { page-break-inside: avoid !important; page-break-after: auto !important; }
-            .mb-12 { page-break-after: auto !important; margin-bottom: 2rem !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .unit-row { page-break-inside: avoid !important; }
         }
     </style>
 </head>
@@ -99,7 +91,7 @@
             </div>
         </div>
         <div>
-            <a href="index.html" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-500 transition py-2 px-5 rounded-lg font-bold text-white shadow-md flex items-center gap-2 border border-blue-400">
+            <a href="https://sumaetjac.github.io/Paineis-SUMAE/" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-500 transition py-2 px-5 rounded-lg font-bold text-white shadow-md flex items-center gap-2 border border-blue-400">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                 Voltar aos Painéis SUMAE
             </a>
@@ -242,7 +234,7 @@
                     </button>
                     <button onclick="window.print()" class="bg-red-600 text-white px-5 py-2.5 rounded-lg font-bold shadow-sm hover:bg-red-700 transition flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        Guardar PDF
+                        Imprimir / Guardar PDF
                     </button>
                 </div>
             </div>
@@ -250,7 +242,7 @@
             <div id="areaParaPDF" class="bg-white p-8 md:p-10 rounded-xl shadow-sm border border-gray-200">
                 <div class="text-center mb-10 border-b border-gray-200 pb-8">
                     <h1 class="text-3xl font-black text-slate-800 mb-2 uppercase tracking-tight">Relatório de Saneamento do DataJud</h1>
-                    <p class="text-slate-500 font-medium">Monitoramento Estratégico - Qualidade de Dados</p>
+                    <p class="text-slate-500 font-medium">Análise de Qualidade para o Prêmio CNJ</p>
                 </div>
 
                 <div id="conteudoGerado" class="space-y-16"></div>
@@ -265,7 +257,7 @@
         // -------------------------------------------------------------
         // DICIONÁRIO INTERNO DE SERVENTIAS
         // -------------------------------------------------------------
-      const baseServentiasNativa = {
+const baseServentiasNativa = {
     "33567": { nome: "1ª TURMA RECURSAL", status: "ATIVO" },
     "3612": { nome: "1ª VARA CÍVEL DE CRUZEIRO DO SUL", status: "ATIVO" },
     "3621": { nome: "1ª VARA CÍVEL DE RIO BRANCO", status: "ATIVO" },
@@ -602,7 +594,6 @@
     "17054": { nome: "VARA ÚNICA DE XAPURI", status: "ATIVO" },
 };
 
-
         function atualizarNomeArquivo(input, pId, colorClassDefault) {
             const displayElement = document.getElementById(pId);
             if (input.files && input.files.length > 0) {
@@ -712,27 +703,28 @@
                     let htmlFinal = "";
                     let unidadesInativasComErroGeral = [];
 
-                    const themeBasicos = { text: 'text-blue-700', border: 'border-blue-500', bg: 'bg-blue-50', badge: 'bg-blue-100 text-blue-800' };
-                    const themeAssuntos = { text: 'text-indigo-700', border: 'border-indigo-500', bg: 'bg-indigo-50', badge: 'bg-indigo-100 text-indigo-800' };
-                    const themeAtivo = { text: 'text-purple-700', border: 'border-purple-500', bg: 'bg-purple-50', badge: 'bg-purple-100 text-purple-800' };
-                    const themePassivo = { text: 'text-pink-700', border: 'border-pink-500', bg: 'bg-pink-50', badge: 'bg-pink-100 text-pink-800' };
+                    const themeBasicos = { text: 'text-blue-700', border: 'border-blue-500' };
+                    const themeAssuntos = { text: 'text-indigo-700', border: 'border-indigo-500' };
+                    const themeAtivo = { text: 'text-purple-700', border: 'border-purple-500' };
+                    const themePassivo = { text: 'text-pink-700', border: 'border-pink-500' };
 
+                    // Metas do CNJ passadas como parâmetro final
                     if (dadosBasicos.length > 0) {
-                        let r = gerarSecao(dadosBasicos, "A. Dados Básicos", "dsc_orgao", "arquivos_orgaos", ["lista.classeProcessual_invalida"], themeBasicos, mapaServentias);
+                        let r = gerarSecao(dadosBasicos, "A. Dados Básicos", "dsc_orgao", "arquivos_orgaos", ["lista.classeProcessual_invalida"], themeBasicos, mapaServentias, 100);
                         htmlFinal += r.html;
                         unidadesInativasComErroGeral.push(...r.inativas);
                     }
                     if (dadosAssuntos.length > 0) {
-                        let r = gerarSecao(dadosAssuntos, "B. Assuntos", "dsc_orgao", "arquivos_orgaos", ["lista.assuntos_invalidos"], themeAssuntos, mapaServentias);
+                        let r = gerarSecao(dadosAssuntos, "B. Assuntos", "dsc_orgao", "arquivos_orgaos", ["lista.assuntos_invalidos"], themeAssuntos, mapaServentias, 99);
                         htmlFinal += r.html;
                         unidadesInativasComErroGeral.push(...r.inativas);
                     }
                     if (dadosPartes.length > 0) {
-                        let rAtivo = gerarSecao(dadosPartes, "C.1 Partes (Polo Ativo)", "cod_orgao", "processos_polo_ativo_recorte_premio", ["lista.proc_polo_ativo_doc_invalido"], themeAtivo, mapaServentias);
+                        let rAtivo = gerarSecao(dadosPartes, "C.1 Partes (Polo Ativo)", "cod_orgao", "processos_polo_ativo_recorte_premio", ["lista.proc_polo_ativo_doc_invalido"], themeAtivo, mapaServentias, 98);
                         htmlFinal += rAtivo.html;
                         unidadesInativasComErroGeral.push(...rAtivo.inativas);
 
-                        let rPassivo = gerarSecao(dadosPartes, "C.2 Partes (Polo Passivo)", "cod_orgao", "processos_polo_passivo_recorte_premio", ["lista.proc_polo_passivo_doc_invalido"], themePassivo, mapaServentias);
+                        let rPassivo = gerarSecao(dadosPartes, "C.2 Partes (Polo Passivo)", "cod_orgao", "processos_polo_passivo_recorte_premio", ["lista.proc_polo_passivo_doc_invalido"], themePassivo, mapaServentias, 98);
                         htmlFinal += rPassivo.html;
                         unidadesInativasComErroGeral.push(...rPassivo.inativas);
                     }
@@ -756,12 +748,12 @@
             }, 500);
         }
 
-        function gerarSecao(dados, tituloSecao, colunaUnidade, colunaAnalisados, colunasErros, theme, mapaServentias) {
+        function gerarSecao(dados, tituloSecao, colunaUnidade, colunaAnalisados, colunasErros, theme, mapaServentias, metaIndividual) {
             let totalAnalisados = 0;
-            let totalErros = 0;
             let unidades = {};
             let listaParaAbaExcel = [];
             let inativasNestaSecao = []; 
+            let unidadesNaMeta = 0;
 
             dados.forEach(linha => {
                 let originalID = String(linha[colunaUnidade]).replace('.0', '').trim();
@@ -794,15 +786,21 @@
                 });
             });
 
-            let unidadesComErro = Object.keys(unidades)
+            const keys = Object.keys(unidades);
+            const totalUnidadesAnalyzed = keys.length;
+
+            let unidadesComErro = keys
                 .map(key => {
                     let obj = unidades[key];
                     let procs = [...new Set(obj.listaProcessos)];
                     let erros = procs.length;
                     let validos = obj.analisados - erros;
                     if (validos < 0) validos = 0;
-                    let taxaValidos = obj.analisados > 0 ? ((validos / obj.analisados) * 100).toFixed(2) : "0.00";
+                    
+                    let taxaValidos = obj.analisados > 0 ? ((validos / obj.analisados) * 100) : 100;
                     let inativo = obj.status.includes('INATIVO');
+
+                    if (taxaValidos >= metaIndividual) unidadesNaMeta++;
 
                     listaParaAbaExcel.push({
                         "Unidade/Órgão (Código)": key,
@@ -811,61 +809,58 @@
                         "Analisados": obj.analisados,
                         "Válidos": validos,
                         "Inconsistências": erros,
-                        "Taxa de Válidos (%)": parseFloat(taxaValidos),
+                        "Validação (%)": parseFloat(taxaValidos.toFixed(2)),
                         "Processos com Erro": procs.join(', ')
                     });
 
                     return {
                         codigo: key, nome: obj.nomeExibicao, inativo: inativo,
-                        analisados: obj.analisados, validos: validos,
-                        taxaValidos: taxaValidos, processos: procs
+                        analisados: obj.analisados, validos: validos, erros: erros,
+                        taxaValidos: taxaValidos.toFixed(2), processos: procs
                     };
                 })
                 .filter(u => u.processos.length > 0)
                 .sort((a, b) => b.processos.length - a.processos.length);
 
+            let totalErrosGeral = 0;
             unidadesComErro.forEach(u => {
-                totalErros += u.processos.length;
+                totalErrosGeral += u.processos.length;
                 if (u.inativo) inativasNestaSecao.push(u.nome);
             });
             
-            // Aqui garantimos que o Excel filtrado só receba os dados relevantes
+            // Excel recebe apenas as unidades com problemas, com a Validação (%) embutida
             dadosParaExcel[tituloSecao] = listaParaAbaExcel.filter(item => item["Inconsistências"] > 0);
 
-            let validosGeral = totalAnalisados - totalErros;
-            if(validosGeral < 0) validosGeral = 0;
-            let taxaValidosGeral = totalAnalisados > 0 ? ((validosGeral / totalAnalisados) * 100).toFixed(2) : "0.00";
+            let percUnidadesNaMeta = totalUnidadesAnalyzed > 0 ? ((unidadesNaMeta / totalUnidadesAnalyzed) * 100).toFixed(2) : "0.00";
 
             let html = `<div class="mb-12">`;
             
-            // Cabeçalho da Secção
             html += `<div class="flex items-center gap-3 mb-6">
                         <div class="h-8 w-2 rounded-full bg-${theme.border.split('-')[1]}-500"></div>
                         <h2 class="text-2xl font-bold ${theme.text} uppercase tracking-tight">${tituloSecao}</h2>
                      </div>`;
             
-            // Resumo (Cards)
             html += `
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-white border-t-4 border-slate-300 shadow-sm rounded-b-xl p-5 text-center">
-                        <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Avaliado</span>
+                        <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Processos Analisados</span>
                         <span class="text-3xl font-black text-slate-700">${totalAnalisados.toLocaleString('pt-BR')}</span>
-                    </div>
-                    <div class="bg-white border-t-4 border-emerald-400 shadow-sm rounded-b-xl p-5 text-center">
-                        <span class="block text-xs font-bold text-emerald-500 uppercase tracking-wider mb-2">Válidos</span>
-                        <span class="text-3xl font-black text-emerald-600">${validosGeral.toLocaleString('pt-BR')}</span>
                     </div>
                     <div class="bg-white border-t-4 border-red-400 shadow-sm rounded-b-xl p-5 text-center">
                         <span class="block text-xs font-bold text-red-500 uppercase tracking-wider mb-2">Inconsistências</span>
-                        <span class="text-3xl font-black text-red-600">${totalErros.toLocaleString('pt-BR')}</span>
+                        <span class="text-3xl font-black text-red-600">${totalErrosGeral.toLocaleString('pt-BR')}</span>
                     </div>
-                    <div class="bg-white border-t-4 border-blue-400 shadow-sm rounded-b-xl p-5 text-center">
-                        <span class="block text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">Taxa Global</span>
-                        <span class="text-3xl font-black text-blue-600">${taxaValidosGeral}%</span>
+                    <div class="bg-white border-t-4 border-orange-400 shadow-sm rounded-b-xl p-5 text-center">
+                        <span class="block text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Meta Individual</span>
+                        <span class="text-3xl font-black text-orange-600">≥ ${metaIndividual}%</span>
+                    </div>
+                    <div class="bg-white border-t-4 border-blue-600 shadow-sm rounded-b-xl p-5 text-center">
+                        <span class="block text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Unidades na Meta (%)</span>
+                        <span class="text-3xl font-black text-blue-700">${percUnidadesNaMeta}%</span>
+                        <p class="text-[10px] text-gray-400 mt-1">${unidadesNaMeta} de ${totalUnidadesAnalyzed} unidades</p>
                     </div>
                 </div>`;
 
-            // Tabela Modernizada
             if (unidadesComErro.length > 0) {
                 html += `
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
@@ -875,7 +870,7 @@
                                 <th class="p-4 font-bold w-1/2">Unidade / Órgão</th>
                                 <th class="p-4 font-bold text-center">Analisados</th>
                                 <th class="p-4 font-bold text-center">Inconsistências</th>
-                                <th class="p-4 font-bold text-center">Taxa Válidos</th>
+                                <th class="p-4 font-bold text-center">Validação (%)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white">`;
@@ -883,8 +878,8 @@
                 unidadesComErro.forEach(u => {
                     let badgesProcessos = u.processos.map(proc => `<span class="process-badge">${proc}</span>`).join('');
                     let tagInativo = u.inativo ? `<span class="badge-inativo">Inativa</span>` : '';
+                    let colorTaxa = parseFloat(u.taxaValidos) >= metaIndividual ? 'text-emerald-600' : 'text-red-500';
 
-                    // REMOVIDO: O "page-break-inside: avoid" que causava o congelamento no Ctrl+P
                     html += `
                         <tr class="unit-row hover:bg-gray-50 transition border-b border-gray-100">
                             <td class="p-4">
@@ -895,14 +890,14 @@
                             <td class="p-4 text-center text-gray-600 font-medium text-sm">${u.analisados.toLocaleString('pt-BR')}</td>
                             <td class="p-4 text-center">
                                 <span class="bg-red-100 text-red-800 font-bold px-2.5 py-1 rounded-full text-xs border border-red-200 shadow-sm">
-                                    ${u.processos.length.toLocaleString('pt-BR')}
+                                    ${u.erros.toLocaleString('pt-BR')}
                                 </span>
                             </td>
-                            <td class="p-4 text-center text-emerald-600 font-bold text-sm">${u.taxaValidos}%</td>
+                            <td class="p-4 text-center ${colorTaxa} font-bold text-sm">${u.taxaValidos}%</td>
                         </tr>
                         <tr>
                             <td colspan="4" class="p-4 pt-1 pb-5 bg-gray-50/30">
-                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Processos listados (${u.processos.length}):</div>
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Processos listados (${u.erros}):</div>
                                 <div class="block leading-relaxed">${badgesProcessos}</div>
                             </td>
                         </tr>`;
@@ -913,8 +908,7 @@
                 html += `
                 <div class="bg-emerald-50 border border-emerald-200 p-6 rounded-xl text-center shadow-sm">
                     <p class="text-emerald-700 font-bold text-lg flex items-center justify-center gap-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Nenhuma unidade possui inconsistência nesta categoria. Parabéns!
+                        Todas as unidades atingiram 100% de conformidade nesta categoria. Parabéns!
                     </p>
                 </div>`;
             }
