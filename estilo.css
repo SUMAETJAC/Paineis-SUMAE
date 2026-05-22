@@ -184,3 +184,271 @@ footer {
   .card h3 { font-size: 0.9rem; }
   .btn { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
 }
+
+.cofre-lock-card {
+  max-width: 400px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.cofre-lock-icone {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #1f2a44;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin: 0 auto 1rem;
+}
+
+.cofre-lock-card h3 {
+  font-size: 1.2rem;
+  margin: 0 0 0.4rem;
+  color: #1f2a44;
+}
+
+.cofre-lock-subtitulo {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.cofre-form {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.cofre-grupo-campo label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  color: #1f2a44;
+}
+
+.cofre-grupo-campo input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+
+.cofre-grupo-campo input:focus {
+  outline: none;
+  border-color: #1f2a44;
+}
+
+.cofre-btn-desbloquear {
+  width: 100%;
+  padding: 0.7rem;
+  background: #1f2a44;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+}
+
+.cofre-btn-desbloquear:hover:not(:disabled) { background: #2d3f5f; }
+.cofre-btn-desbloquear:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cofre-erro-msg {
+  color: #dc2626;
+  font-size: 0.82rem;
+  min-height: 1rem;
+  margin: 0;
+  text-align: center;
+}
+
+.cofre-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cofre-info {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.cofre-btn-lock {
+  font-size: 0.85rem;
+  padding: 0.4rem 1rem;
+}
+
+.cofre-grupo { margin-bottom: 2rem; }
+
+.cofre-grupo-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-left: 5px solid #1f2a44;
+  padding-left: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.cofre-grupo-titulo {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #1f2a44;
+}
+
+.cofre-grupo-count {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+}
+
+.cofre-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.cofre-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  overflow: hidden;
+  border-left: 4px solid #1f2a44;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.cofre-card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  transform: translateY(-3px);
+}
+
+.cofre-card-topo {
+  padding: 0.9rem 1rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cofre-card-titulo {
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
+  color: #1f2a44;
+}
+
+.cofre-card-corpo {
+  padding: 0.7rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.cofre-linha {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.cofre-label {
+  color: #94a3b8;
+  white-space: nowrap;
+  min-width: 64px;
+  font-size: 0.8rem;
+  padding-top: 1px;
+}
+
+.cofre-valor {
+  color: #1e293b;
+  word-break: break-all;
+  flex: 1;
+}
+
+.cofre-url {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.cofre-url:hover { text-decoration: underline; }
+
+.cofre-vazio { color: #cbd5e1; }
+
+.cofre-linha-senha { align-items: center; }
+
+.cofre-senha-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.cofre-senha-mask {
+  font-family: monospace;
+  font-size: 0.88rem;
+  color: #1e293b;
+  flex: 1;
+  word-break: break-all;
+}
+
+.cofre-action-btn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  font-size: 0.78rem;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.cofre-action-btn:hover { background: #e2e8f0; color: #1f2a44; }
+.cofre-action-btn--copied { background: #dcfce7 !important; color: #15803d !important; }
+
+.cofre-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: bold;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cofre-badge--pessoal       { background: #dbeafe; color: #1e40af; }
+.cofre-badge--sistemas-tjac { background: #dcfce7; color: #15803d; }
+.cofre-badge--sumae         { background: #fef9c3; color: #854d0e; }
+.cofre-badge--outros        { background: #f3f4f6; color: #374151; }
+
+.cofre-notas-valor {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 480px) {
+  .cofre-lock-card { padding: 1.5rem; }
+  .cofre-cards-grid { grid-template-columns: 1fr; }
+}
