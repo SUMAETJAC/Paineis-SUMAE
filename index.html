@@ -71,6 +71,9 @@
     <button class="tablink" onclick="openTab(event, 'anotacoes')">
       <i class="fa-solid fa-pen-to-square"></i> Anotações
     </button>
+    <button class="tablink" onclick="openTab(event, 'cofre')">
+      <i class="fa-solid fa-shield-halved"></i> Cofre
+    </button>
   </nav>
 
   <div class="search-box">
@@ -81,18 +84,7 @@
     <h2>Painéis</h2>
     <div class="grid">
       
-      <div class="card painel">
-          <img src="img/premio (2).png" alt="Prêmio 2026 (Sistema de monitoramento)" class="card-icon">
-          <h3>Prêmio 2026 (Sistema de monitoramento)</h3>
-          <div class="card-buttons">
-              <a href="https://app.powerbi.com/view?r=eyJrIjoiODhiNjI2ZTktODk5ZC00OGI1LTg4MDYtNTBiZjJlY2Q1NWNhIiwidCI6IjQzY2JlMDcwLTQyNmItNDkzYS04NDdmLWM1MTUwMmQ0MzViOSJ9" target="_blank" class="btn">
-                  <i class="fa-solid fa-chart-line"></i> Painel
-              </a>
-              <a href="https://premiotjac.com" target="_blank" class="btn">
-                  <i class="fa-solid fa-laptop-code"></i> Sistema
-              </a>
-          </div>
-      </div>
+   
 
       <div class="card painel">
           <img src="img/trofeu Conquistado .png" alt="Painel Prêmio 2025" class="card-icon">
@@ -469,18 +461,7 @@
           </div>
       </div>
 
-      <div class="card painel">
-          <img src="img/premio (2).png" alt="Prêmio 2026 (Sistema de monitoramento)" class="card-icon">
-          <h3>Prêmio 2026 (Sistema de monitoramento)</h3>
-          <div class="card-buttons">
-              <a href="https://app.powerbi.com/view?r=eyJrIjoiODhiNjI2ZTktODk5ZC00OGI1LTg4MDYtNTBiZjJlY2Q1NWNhIiwidCI6IjQzY2JlMDcwLTQyNmItNDkzYS04NDdmLWM1MTUwMmQ0MzViOSJ9" target="_blank" class="btn">
-                  <i class="fa-solid fa-chart-line"></i> Painel
-              </a>
-              <a href="https://premiotjac.com" target="_blank" class="btn">
-                  <i class="fa-solid fa-laptop-code"></i> Sistema
-              </a>
-          </div>
-      </div>
+     
 
       <div class="card painel">
           <img src="img/ICONANALISE.png" alt="Relatório de Saneamento do DataJud" class="card-icon">
@@ -705,12 +686,51 @@
     </div>
   </section>
 
+  <section id="cofre" class="tabcontent">
+    <h2><i class="fa-solid fa-shield-halved"></i> Cofre de Credenciais</h2>
+
+    <div id="cofre-bloqueado">
+      <div class="cofre-lock-card">
+        <div class="cofre-lock-icone">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3>Cofre Bloqueado</h3>
+        <p class="cofre-lock-subtitulo">Use as mesmas credenciais do aplicativo Cofre de Senhas.</p>
+        <form id="formCofre" onsubmit="abrirCofre(event)" class="cofre-form">
+          <div class="cofre-grupo-campo">
+            <label for="cofre-email">E-mail</label>
+            <input type="email" id="cofre-email" placeholder="seu@email.com" autocomplete="email" required>
+          </div>
+          <div class="cofre-grupo-campo">
+            <label for="cofre-senha-mestra">Senha-mestra</label>
+            <input type="password" id="cofre-senha-mestra" placeholder="••••••••••••" autocomplete="current-password" required>
+          </div>
+          <button type="submit" id="cofre-btn-submit" class="cofre-btn-desbloquear">
+            <i class="fa-solid fa-unlock-keyhole"></i> Desbloquear
+          </button>
+          <p id="cofre-erro-msg" class="cofre-erro-msg"></p>
+        </form>
+      </div>
+    </div>
+
+    <div id="cofre-aberto" style="display:none;">
+      <div class="cofre-topbar">
+        <span id="cofre-info" class="cofre-info"></span>
+        <button class="btn cofre-btn-lock" onclick="bloquearCofre()">
+          <i class="fa-solid fa-lock"></i> Bloquear Cofre
+        </button>
+      </div>
+      <div id="cofre-credenciais"></div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
   <p>Site Produzido pela SUMAE</p>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
