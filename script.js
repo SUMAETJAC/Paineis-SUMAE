@@ -63,15 +63,15 @@ async function buscarCredenciais(email, senha) {
 
   const userId = sessao.user.id;
 
-66:   const { data: perfil, error: erroPerfil } = await dbVault
-67:     .from("profiles")
-68:     .select("kdf_salt, kdf_iterations")
-69:     .eq("id", userId)
-70:     .single();
-71:
-72:   if (erroPerfil || !perfil?.kdf_salt || !perfil?.kdf_iterations) {
-73:     throw new Error("Perfil sem salt — verifique se o usuário existe no Cofre.");
-74:   }
+const { data: perfil, error: erroPerfil } = await dbVault
+  .from("profiles")
+  .select("kdf_salt, kdf_iterations")
+  .eq("id", userId)
+  .single();
+
+if (erroPerfil || !perfil?.kdf_salt || !perfil?.kdf_iterations) {
+  throw new Error("Perfil sem salt — verifique se o usuário existe no Cofre.");
+}
 
   const chave = await derivarChaveMestra(
     senha,
