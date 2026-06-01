@@ -67,10 +67,19 @@ const { data: perfil, error: erroPerfil } = await dbVault
   .from("profiles")
   .select("kdf_salt, kdf_iterations")
   .eq("id", userId)
-  .single();
+  .maybeSingle();
 
-if (erroPerfil || !perfil?.kdf_salt || !perfil?.kdf_iterations) {
-  throw new Error("Perfil sem salt — verifique se o usuário existe no Cofre.");
+if (erroPerfil) {
+  console.error("[Cofre] Erro ao buscar perfil:", erroPerfil);
+  throw new Error("Erro ao buscar perfil do Cofre: " + erroPerfil.message);
+}
+
+if (!perfil) {
+  throw new Error("Usuário autenticado, mas sem perfil no Cofre.");
+}
+
+if (!perfil.kdf_salt || !perfil.kdf_iterations) {
+  throw new Error("Perfil do Cofre sem salt ou iterações.");
 }
 
   const chave = await derivarChaveMestra(
