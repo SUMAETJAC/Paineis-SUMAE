@@ -63,15 +63,15 @@ async function buscarCredenciais(email, senha) {
 
   const userId = sessao.user.id;
 
-  const { data: perfil, error: erroPerfil } = await dbVault
- .from("credentials")
-.select("id, category, service_name, service_url, username_ciphertext, username_iv, password_ciphertext, password_iv, notes_ciphertext, notes_iv")
-.eq("user_id", userId)
-.order("service_name", { ascending: true });
-
-  if (erroPerfil || !perfil?.kdf_salt) {
-    throw new Error("Perfil sem salt — verifique se o usuário existe no Cofre.");
-  }
+66:   const { data: perfil, error: erroPerfil } = await dbVault
+67:     .from("profiles")
+68:     .select("kdf_salt, kdf_iterations")
+69:     .eq("id", userId)
+70:     .single();
+71:
+72:   if (erroPerfil || !perfil?.kdf_salt || !perfil?.kdf_iterations) {
+73:     throw new Error("Perfil sem salt — verifique se o usuário existe no Cofre.");
+74:   }
 
   const chave = await derivarChaveMestra(
     senha,
@@ -79,10 +79,10 @@ async function buscarCredenciais(email, senha) {
     perfil.kdf_iterations
   );
 
-  const { data: linhas, error: erroBanco } = await dbVault
-    .from("credentials")
-    .select("*")
-    .order("service_name", { ascending: true });
+const { data: linhas, error: erroBanco } = await dbVault
+  .from("credentials")
+  .select("*")
+  .order("service_name", { ascending: true });
 
   if (erroBanco) {
     throw new Error("Erro ao buscar credenciais: " + erroBanco.message);
