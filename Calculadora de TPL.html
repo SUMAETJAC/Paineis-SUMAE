@@ -7,12 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* VOICE simple work tool, quiet and clear
-   IDEA a process docket line: dated events, periods counted between them
-   PICTURE the timeline of the selected process beside the net days in large figures
-   COLOUR white ground, near-black ink, blue #2f5bea for open periods, orange #f08c2e for suspensions, grey for closed
-   TYPE Inter only, heavy weight for the result
-   LAYOUT top: title and cut-off date; result card with number + timeline; below: events and periods; phone stacks */
+
 :root{color-scheme:light;--bg:#ffffff;--ink:#14181f;--mut:#667085;--line:#e4e7ec;--soft:#f5f7fb;--blue:#2f5bea;--org:#f08c2e;--grey:#b4bcc8;--red:#e5484d}
 html{background:#ffffff}
 *{box-sizing:border-box;min-width:0}
@@ -61,6 +56,8 @@ th{font-size:13px;color:var(--mut);font-weight:600}
 .kpi{background:var(--soft);border-radius:10px;padding:10px 12px}
 .kpi b{display:block;font-size:26px;letter-spacing:-.02em}
 .kpi span{font-size:13px;color:var(--mut)}
+a.voltar{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font-weight:600;text-decoration:none}
+a.voltar:hover{border-color:var(--blue)}
 a.go{color:inherit;text-decoration-color:var(--line)}
 @media(max-width:820px){.hero,.cols{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){table{font-size:13px}.ev input[type=date]{width:135px}.ev select{width:135px}.fig{height:170px}}
@@ -70,7 +67,7 @@ a.go{color:inherit;text-decoration-color:var(--line)}
 <body>
 <div class="wrap">
  <div class="head">
-  <h1>Calculadora de TPL</h1>
+  <div class="row"><a href="index.html" class="voltar" aria-label="Voltar para a Central de Ferramentas">&larr; Voltar</a><h1>Calculadora de TPL</h1></div>
   <div class="row"><label for="corte">Data de corte</label><input type="date" id="corte"><button id="hoje">Hoje</button></div>
  </div>
 
